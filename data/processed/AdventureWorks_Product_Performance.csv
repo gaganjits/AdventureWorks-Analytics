@@ -1,0 +1,131 @@
+ProductKey,TotalSold,TotalRevenue,OrderCount,TotalReturned,ReturnCount,ProductName,CategoryName,SubcategoryName,ReturnRate_%,AvgRevenue
+214,2099,73444.01000000001,2099,70.0,70.0,"Sport-100 Helmet, Red",Accessories,Helmets,3.33,34.99
+215,1940,65269.74799999999,1940,52.0,52.0,"Sport-100 Helmet, Black",Accessories,Helmets,2.68,33.64
+220,1995,67120.17899999999,1995,66.0,66.0,"Sport-100 Helmet, Blue",Accessories,Helmets,3.31,33.64
+223,4151,35882.074199999995,2062,46.0,45.0,AWC Logo Cap,Clothing,Caps,1.11,8.64
+226,392,18842.3816,392,12.0,12.0,"Long-Sleeve Logo Jersey, S",Clothing,Jerseys,3.06,48.07
+229,408,19611.4584,408,15.0,15.0,"Long-Sleeve Logo Jersey, M",Clothing,Jerseys,3.68,48.07
+232,424,20380.535200000002,424,15.0,15.0,"Long-Sleeve Logo Jersey, L",Clothing,Jerseys,3.54,48.07
+235,381,18313.641300000003,381,10.0,10.0,"Long-Sleeve Logo Jersey, XL",Clothing,Jerseys,2.62,48.07
+310,169,604727.63,169,4.0,4.0,"Road-150 Red, 62",Bikes,Road Bikes,2.37,3578.27
+311,139,497379.52999999997,139,7.0,7.0,"Road-150 Red, 44",Bikes,Road Bikes,5.04,3578.27
+312,179,640510.33,179,8.0,8.0,"Road-150 Red, 48",Bikes,Road Bikes,4.47,3578.27
+313,168,601149.36,168,5.0,5.0,"Road-150 Red, 52",Bikes,Road Bikes,2.98,3578.27
+314,157,561788.39,157,5.0,5.0,"Road-150 Red, 56",Bikes,Road Bikes,3.18,3578.27
+320,65,45441.383,65,3.0,3.0,"Road-650 Red, 58",Bikes,Road Bikes,4.62,699.1
+322,39,27264.8298,39,2.0,2.0,"Road-650 Red, 60",Bikes,Road Bikes,5.13,699.1
+324,72,50335.070400000004,72,3.0,3.0,"Road-650 Red, 62",Bikes,Road Bikes,4.17,699.1
+326,65,45441.383,65,3.0,3.0,"Road-650 Red, 44",Bikes,Road Bikes,4.62,699.1
+328,75,52432.365,75,4.0,4.0,"Road-650 Red, 48",Bikes,Road Bikes,5.33,699.1
+330,51,35654.008200000004,51,6.0,6.0,"Road-650 Red, 52",Bikes,Road Bikes,11.76,699.1
+332,64,44742.2848,64,2.0,2.0,"Road-650 Black, 58",Bikes,Road Bikes,3.12,699.1
+334,63,44043.1866,63,2.0,2.0,"Road-650 Black, 60",Bikes,Road Bikes,3.17,699.1
+336,50,34954.91,50,1.0,1.0,"Road-650 Black, 62",Bikes,Road Bikes,2.0,699.1
+338,50,34954.91,50,0.0,0.0,"Road-650 Black, 44",Bikes,Road Bikes,0.0,699.1
+340,56,39149.4992,56,1.0,1.0,"Road-650 Black, 48",Bikes,Road Bikes,1.79,699.1
+342,72,50335.070400000004,72,1.0,1.0,"Road-650 Black, 52",Bikes,Road Bikes,1.39,699.1
+344,29,98599.70999999999,29,0.0,0.0,"Mountain-100 Silver, 38",Bikes,Mountain Bikes,0.0,3399.99
+345,25,84999.75,25,0.0,0.0,"Mountain-100 Silver, 42",Bikes,Mountain Bikes,0.0,3399.99
+346,24,81599.76,24,2.0,2.0,"Mountain-100 Silver, 44",Bikes,Mountain Bikes,8.33,3399.99
+347,22,74799.78,22,1.0,1.0,"Mountain-100 Silver, 48",Bikes,Mountain Bikes,4.55,3399.99
+348,26,87749.73999999999,26,1.0,1.0,"Mountain-100 Black, 38",Bikes,Mountain Bikes,3.85,3374.99
+349,26,87749.73999999999,26,1.0,1.0,"Mountain-100 Black, 42",Bikes,Mountain Bikes,3.85,3374.99
+350,31,104624.68999999999,31,2.0,2.0,"Mountain-100 Black, 44",Bikes,Mountain Bikes,6.45,3374.99
+351,36,121499.63999999998,36,2.0,2.0,"Mountain-100 Black, 48",Bikes,Mountain Bikes,5.56,3374.99
+352,586,1213851.8856000002,586,17.0,16.0,"Mountain-200 Silver, 38",Bikes,Mountain Bikes,2.9,2071.42
+354,547,1133066.5212,547,15.0,15.0,"Mountain-200 Silver, 42",Bikes,Mountain Bikes,2.74,2071.42
+356,571,1182780.5916000002,571,12.0,12.0,"Mountain-200 Silver, 46",Bikes,Mountain Bikes,2.1,2071.42
+358,569,1165936.8758,569,15.0,15.0,"Mountain-200 Black, 38",Bikes,Mountain Bikes,2.64,2049.1
+360,602,1233557.1164,602,21.0,21.0,"Mountain-200 Black, 42",Bikes,Mountain Bikes,3.49,2049.1
+362,606,1241753.5092,606,18.0,18.0,"Mountain-200 Black, 46",Bikes,Mountain Bikes,2.97,2049.1
+368,141,344512.35,141,3.0,3.0,"Road-250 Red, 44",Bikes,Road Bikes,2.13,2443.35
+369,161,393379.35,161,4.0,4.0,"Road-250 Red, 48",Bikes,Road Bikes,2.48,2443.35
+370,128,312748.8,128,5.0,5.0,"Road-250 Red, 52",Bikes,Road Bikes,3.91,2443.35
+371,303,661013.4375,303,11.0,11.0,"Road-250 Red, 58",Bikes,Road Bikes,3.63,2181.56
+373,263,573750.9375,263,9.0,9.0,"Road-250 Black, 44",Bikes,Road Bikes,3.42,2181.56
+375,294,641379.375,294,8.0,8.0,"Road-250 Black, 48",Bikes,Road Bikes,2.72,2181.56
+377,316,689373.75,316,11.0,11.0,"Road-250 Black, 52",Bikes,Road Bikes,3.48,2181.56
+379,268,584658.75,268,5.0,5.0,"Road-250 Black, 58",Bikes,Road Bikes,1.87,2181.56
+381,264,264115.5,264,7.0,7.0,"Road-550-W Yellow, 38",Bikes,Road Bikes,2.65,1000.44
+383,259,259113.3125,259,5.0,5.0,"Road-550-W Yellow, 40",Bikes,Road Bikes,1.93,1000.44
+385,296,296129.5,296,11.0,11.0,"Road-550-W Yellow, 42",Bikes,Road Bikes,3.72,1000.44
+387,281,281122.9375,281,10.0,10.0,"Road-550-W Yellow, 44",Bikes,Road Bikes,3.56,1000.44
+389,258,258112.875,258,7.0,7.0,"Road-550-W Yellow, 48",Bikes,Road Bikes,2.71,1000.44
+462,886,20863.6166,453,15.0,15.0,"Half-Finger Gloves, S",Clothing,Gloves,1.69,23.55
+464,918,21617.1558,465,16.0,16.0,"Half-Finger Gloves, M",Clothing,Gloves,1.74,23.55
+466,840,19780.404000000002,414,18.0,18.0,"Half-Finger Gloves, L",Clothing,Gloves,2.14,23.55
+471,157,9969.5,157,8.0,8.0,"Classic Vest, S",Clothing,Vests,5.1,63.5
+472,182,11557.0,182,7.0,7.0,"Classic Vest, M",Clothing,Vests,3.85,63.5
+473,182,11557.0,182,4.0,4.0,"Classic Vest, L",Clothing,Vests,2.2,63.5
+474,283,19807.17,283,12.0,12.0,"Women's Mountain Shorts, S",Clothing,Shorts,4.24,69.99
+475,327,22886.73,327,11.0,11.0,"Women's Mountain Shorts, M",Clothing,Shorts,3.36,69.99
+476,334,23376.66,334,17.0,17.0,"Women's Mountain Shorts, L",Clothing,Shorts,5.09,69.99
+477,7967,39755.33,3983,155.0,149.0,Water Bottle - 30 oz.,Accessories,Bottles and Cages,1.95,4.99
+478,3810,38061.9,1896,77.0,74.0,Mountain Bottle Cage,Accessories,Bottles and Cages,2.02,9.99
+479,3329,29927.71,1668,56.0,55.0,Road Bottle Cage,Accessories,Bottles and Cages,1.68,8.99
+480,5898,13506.42,2952,95.0,92.0,Patch Kit/8 Patches,Accessories,Tires and Tubes,1.61,2.29
+481,554,4980.46,278,11.0,10.0,"Racing Socks, M",Clothing,Socks,1.99,8.99
+482,509,4575.91,260,11.0,11.0,"Racing Socks, L",Clothing,Socks,2.16,8.99
+483,302,36240.0,302,8.0,8.0,Hitch Rack - 4-Bike,Accessories,Bike Racks,2.65,120.0
+484,1706,13562.7,850,25.0,25.0,Bike Wash - Dissolver,Accessories,Cleaners,1.47,7.95
+485,3960,87040.8,1975,54.0,54.0,Fender Set - Mountain,Accessories,Fenders,1.36,21.98
+486,234,37206.0,234,8.0,8.0,All-Purpose Bike Stand,Accessories,Bike Stands,3.42,159.0
+487,695,38218.05,695,25.0,25.0,Hydration Pack - 70 oz.,Accessories,Hydration Packs,3.6,54.99
+488,388,20948.12,388,13.0,13.0,"Short-Sleeve Classic Jersey, S",Clothing,Jerseys,3.35,53.99
+489,379,20462.21,379,15.0,15.0,"Short-Sleeve Classic Jersey, M",Clothing,Jerseys,3.96,53.99
+490,358,19328.420000000002,358,8.0,8.0,"Short-Sleeve Classic Jersey, L",Clothing,Jerseys,2.23,53.99
+491,383,20678.170000000002,383,5.0,5.0,"Short-Sleeve Classic Jersey, XL",Clothing,Jerseys,1.31,53.99
+528,5678,28333.22,2846,93.0,91.0,Mountain Tire Tube,Accessories,Tires and Tubes,1.64,4.99
+529,4327,17264.73,2173,67.0,67.0,Road Tire Tube,Accessories,Tires and Tubes,1.55,3.99
+530,2740,13672.6,1364,45.0,45.0,Touring Tire Tube,Accessories,Tires and Tubes,1.64,4.99
+535,1560,38984.4,788,39.0,39.0,LL Mountain Tire,Accessories,Tires and Tubes,2.5,24.99
+536,2119,63548.81,1059,28.0,28.0,ML Mountain Tire,Accessories,Tires and Tubes,1.32,29.99
+537,1305,45675.0,1305,49.0,49.0,HL Mountain Tire,Accessories,Tires and Tubes,3.75,35.0
+538,1904,40916.96,957,43.0,43.0,LL Road Tire,Accessories,Tires and Tubes,2.26,21.49
+539,1723,43057.77,868,26.0,26.0,ML Road Tire,Accessories,Tires and Tubes,1.51,24.99
+540,795,25917.0,795,28.0,28.0,HL Road Tire,Accessories,Tires and Tubes,3.52,32.6
+541,1723,49949.77,863,21.0,21.0,Touring Tire,Accessories,Tires and Tubes,1.22,28.99
+560,79,95973.15,79,3.0,3.0,"Touring-2000 Blue, 60",Bikes,Touring Bikes,3.8,1214.85
+561,168,400523.76,168,5.0,5.0,"Touring-1000 Yellow, 46",Bikes,Touring Bikes,2.98,2384.07
+562,146,348074.22000000003,146,7.0,7.0,"Touring-1000 Yellow, 50",Bikes,Touring Bikes,4.79,2384.07
+563,153,364762.71,153,5.0,5.0,"Touring-1000 Yellow, 54",Bikes,Touring Bikes,3.27,2384.07
+564,138,329001.66000000003,138,3.0,3.0,"Touring-1000 Yellow, 60",Bikes,Touring Bikes,2.17,2384.07
+565,54,40086.9,54,3.0,3.0,"Touring-3000 Blue, 54",Bikes,Touring Bikes,5.56,742.35
+566,57,42313.950000000004,57,2.0,2.0,"Touring-3000 Blue, 58",Bikes,Touring Bikes,3.51,742.35
+567,63,46768.05,63,1.0,1.0,"Touring-3000 Blue, 62",Bikes,Touring Bikes,1.59,742.35
+568,59,43798.65,59,3.0,3.0,"Touring-3000 Yellow, 44",Bikes,Touring Bikes,5.08,742.35
+569,56,41571.6,56,1.0,1.0,"Touring-3000 Yellow, 50",Bikes,Touring Bikes,1.79,742.35
+570,47,34890.450000000004,47,0.0,0.0,"Touring-3000 Yellow, 54",Bikes,Touring Bikes,0.0,742.35
+571,46,34148.1,46,2.0,2.0,"Touring-3000 Yellow, 58",Bikes,Touring Bikes,4.35,742.35
+572,48,35632.8,48,2.0,2.0,"Touring-3000 Yellow, 62",Bikes,Touring Bikes,4.17,742.35
+573,176,419596.32,176,5.0,5.0,"Touring-1000 Blue, 46",Bikes,Touring Bikes,2.84,2384.07
+574,148,352842.36000000004,148,4.0,4.0,"Touring-1000 Blue, 50",Bikes,Touring Bikes,2.7,2384.07
+575,157,374298.99000000005,157,5.0,5.0,"Touring-1000 Blue, 54",Bikes,Touring Bikes,3.18,2384.07
+576,147,350458.29000000004,147,5.0,5.0,"Touring-1000 Blue, 60",Bikes,Touring Bikes,3.4,2384.07
+577,96,116625.59999999999,96,8.0,8.0,"Touring-2000 Blue, 46",Bikes,Touring Bikes,8.33,1214.85
+578,100,121484.99999999999,100,3.0,3.0,"Touring-2000 Blue, 50",Bikes,Touring Bikes,3.0,1214.85
+579,86,104477.09999999999,86,1.0,1.0,"Touring-2000 Blue, 54",Bikes,Touring Bikes,1.16,1214.85
+580,240,408237.6,240,7.0,7.0,"Road-350-W Yellow, 40",Bikes,Road Bikes,2.92,1700.99
+581,233,396330.67,233,9.0,9.0,"Road-350-W Yellow, 42",Bikes,Road Bikes,3.86,1700.99
+582,213,362310.87,213,7.0,7.0,"Road-350-W Yellow, 44",Bikes,Road Bikes,3.29,1700.99
+583,225,382722.75,225,5.0,5.0,"Road-350-W Yellow, 48",Bikes,Road Bikes,2.22,1700.99
+584,328,177116.72,328,9.0,9.0,"Road-750 Black, 58",Bikes,Road Bikes,2.74,539.99
+585,52,38602.200000000004,52,0.0,0.0,"Touring-3000 Blue, 44",Bikes,Touring Bikes,0.0,742.35
+586,48,35632.8,48,2.0,2.0,"Touring-3000 Blue, 50",Bikes,Touring Bikes,4.17,742.35
+587,146,112345.54000000001,146,3.0,3.0,"Mountain-400-W Silver, 38",Bikes,Mountain Bikes,2.05,769.49
+588,126,96955.74,126,5.0,5.0,"Mountain-400-W Silver, 40",Bikes,Mountain Bikes,3.97,769.49
+589,126,96955.74,126,4.0,4.0,"Mountain-400-W Silver, 42",Bikes,Mountain Bikes,3.17,769.49
+590,135,103881.15,135,3.0,3.0,"Mountain-400-W Silver, 46",Bikes,Mountain Bikes,2.22,769.49
+591,45,25424.55,45,1.0,1.0,"Mountain-500 Silver, 40",Bikes,Mountain Bikes,2.22,564.99
+592,45,25424.55,45,1.0,1.0,"Mountain-500 Silver, 42",Bikes,Mountain Bikes,2.22,564.99
+593,38,21469.62,38,2.0,2.0,"Mountain-500 Silver, 44",Bikes,Mountain Bikes,5.26,564.99
+594,49,27684.510000000002,49,0.0,0.0,"Mountain-500 Silver, 48",Bikes,Mountain Bikes,0.0,564.99
+595,48,27119.52,48,2.0,2.0,"Mountain-500 Silver, 52",Bikes,Mountain Bikes,4.17,564.99
+596,48,25919.52,48,2.0,2.0,"Mountain-500 Black, 40",Bikes,Mountain Bikes,4.17,539.99
+597,48,25919.52,48,1.0,1.0,"Mountain-500 Black, 42",Bikes,Mountain Bikes,2.08,539.99
+598,56,30239.440000000002,56,1.0,1.0,"Mountain-500 Black, 44",Bikes,Mountain Bikes,1.79,539.99
+599,55,29699.45,55,1.0,1.0,"Mountain-500 Black, 48",Bikes,Mountain Bikes,1.82,539.99
+600,41,22139.59,41,3.0,3.0,"Mountain-500 Black, 52",Bikes,Mountain Bikes,7.32,539.99
+604,356,192236.44,356,7.0,7.0,"Road-750 Black, 44",Bikes,Road Bikes,1.97,539.99
+605,355,191696.45,355,15.0,14.0,"Road-750 Black, 48",Bikes,Road Bikes,4.23,539.99
+606,383,206816.17,383,11.0,11.0,"Road-750 Black, 52",Bikes,Road Bikes,2.87,539.99

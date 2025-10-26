@@ -1,0 +1,3 @@
+Segment,Priority,Strategy,Actions,Expected_ROI
+VIP At-Risk,Critical,Win-Back Campaign,"['Personal outreach from account manager within 48 hours', '20% win-back discount on next purchase', 'Survey to understand reasons for inactivity', 'Exclusive re-engagement offer']",Very High - Preventing high-value churn
+New Engaged,Medium,Nurture & Convert,"['Welcome series email campaign', 'First-time buyer discount on second purchase', 'Educational content about product usage', 'Social proof and customer reviews']",Medium - Building future loyalists

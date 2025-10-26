@@ -1,0 +1,27 @@
+{
+  "intents": [
+    "churn_prediction",
+    "product_recommendations",
+    "revenue_analysis",
+    "customer_segmentation",
+    "return_risk",
+    "top_products",
+    "comparison"
+  ],
+  "entity_types": [
+    "category",
+    "time_period",
+    "customer_id",
+    "product_id",
+    "threshold"
+  ],
+  "example_queries": [
+    "Show me customers at risk of churning",
+    "What are the top selling products?",
+    "Which customer segments do we have?",
+    "Show high-risk products in the Bikes category",
+    "What's our total revenue?",
+    "Recommend products for customer 11000"
+  ],
+  "created": "2025-10-25T16:06:24.038848"
+}

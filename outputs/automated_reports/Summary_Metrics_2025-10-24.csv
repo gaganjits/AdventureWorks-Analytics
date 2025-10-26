@@ -1,0 +1,14 @@
+Metric,Value,Status
+Total Revenue,"$24,914,586.82",✓
+Total Profit,"$10,457,715.43",✓
+Profit Margin (%),41.97,✓
+Total Customers,"17,416",✓
+Churned Customers,"11,482",⚠️
+Churn Rate (%),65.93,⚠️
+Total Products,130,✓
+High-Risk Products,31,⚠️
+High-Risk Rate (%),23.85,⚠️
+Avg Return Rate (%),3.07,⚠️
+Revenue Forecast MAPE (%),11.58,✓
+Churn Model Accuracy (%),100,✓
+Return Risk Model Accuracy (%),100,✓

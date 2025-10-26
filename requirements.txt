@@ -1,0 +1,45 @@
+# Core Data Science Packages
+pandas
+numpy
+matplotlib
+seaborn
+
+# Machine Learning Packages
+scikit-learn
+xgboost
+lightgbm
+
+# Time Series Packages
+statsmodels
+prophet
+# pmdarima  # Note: pmdarima may have compatibility issues with Python 3.13
+# Alternative: Use statsmodels.tsa.statespace.sarimax.SARIMAX for ARIMA models
+
+# Model Evaluation and Utilities
+imbalanced-learn
+joblib
+
+# Jupyter for Experimentation
+jupyter
+notebook
+ipykernel
+
+# Phase 5: Model Optimization & Ensemble
+optuna  # Hyperparameter optimization
+mlflow  # Model tracking and versioning
+scikit-optimize  # Bayesian optimization
+
+# Phase 6: Business Intelligence & Dashboards
+plotly  # Interactive plotting
+dash  # Dashboard framework
+streamlit  # Web app framework
+kaleido  # Static image export for plotly
+
+# Phase 7: Real-Time API & Integration
+fastapi  # Modern API framework
+uvicorn[standard]  # ASGI server for FastAPI
+pydantic  # Data validation
+requests  # HTTP client for webhooks
+jinja2  # Email templates
+python-multipart  # Form data parsing
+aiofiles  # Async file operations

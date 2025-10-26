@@ -1,0 +1,18 @@
+CategoryName,SubcategoryName,ReturnRate_mean,HighReturnRisk_sum,HighReturnRisk_mean,ProductKey_count,TotalSalesQuantity_sum,TotalReturnsQuantity_sum
+Clothing,Shorts,4.23,2,0.67,3,944,40.0
+Clothing,Vests,3.71,1,0.33,3,521,19.0
+Accessories,Hydration Packs,3.6,0,0.0,1,695,25.0
+Accessories,Bike Stands,3.42,0,0.0,1,234,8.0
+Bikes,Road Bikes,3.35,11,0.29,38,7099,223.0
+Bikes,Mountain Bikes,3.28,9,0.32,28,4706,136.0
+Bikes,Touring Bikes,3.27,7,0.32,22,2124,70.0
+Accessories,Helmets,3.11,0,0.0,3,6034,188.0
+Clothing,Jerseys,2.97,1,0.12,8,3113,93.0
+Accessories,Bike Racks,2.65,0,0.0,1,302,8.0
+Clothing,Socks,2.07,0,0.0,2,1063,22.0
+Accessories,Tires and Tubes,2.05,0,0.0,11,29772,534.0
+Accessories,Bottles and Cages,1.88,0,0.0,3,15106,288.0
+Clothing,Gloves,1.86,0,0.0,3,2644,49.0
+Accessories,Cleaners,1.47,0,0.0,1,1706,25.0
+Accessories,Fenders,1.36,0,0.0,1,3960,54.0
+Clothing,Caps,1.11,0,0.0,1,4151,46.0

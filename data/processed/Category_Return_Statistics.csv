@@ -1,0 +1,4 @@
+CategoryName,ReturnRate_mean,ReturnRate_median,ReturnRate_std,ReturnRate_min,ReturnRate_max,HighReturnRisk_sum,HighReturnRisk_mean,ProductKey_count,TotalSalesQuantity_sum,TotalReturnsQuantity_sum,TotalRevenue_sum,ProfitMargin_mean
+Accessories,2.27,1.98,0.87,1.22,3.75,0,0.0,22,57809,1130.0,906673.11,62.75
+Bikes,3.31,3.15,1.87,0.0,11.76,27,0.31,88,13929,429.0,23642495.1,40.7
+Clothing,2.92,2.84,1.18,1.11,5.1,4,0.2,20,12436,269.0,365418.62,46.95

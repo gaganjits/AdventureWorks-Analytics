@@ -1,0 +1,17 @@
+Query,Intent,Entities,Response_Preview
+Show me customers at risk of churning,churn_prediction,{},Churn analysis completed. See dashboard for details.
+What are the top selling products?,general,{},"I understand you're asking about: 'What are the top selling products?'
+
+Please try:
+  - 'Show me cus..."
+Which customer segments do we have?,customer_segmentation,{},"Customer Segments:
+  - New Engaged: 12,047 customers (69.2%)
+  - VIP At-Risk: 5,369 customers (30.8%..."
+Show high-risk products in the Bikes category,general,{'category': 'bikes'},"I understand you're asking about: 'Show high-risk products in the Bikes category'
+
+Please try:
+  - '..."
+What's our total revenue?,revenue_analysis,{},Revenue data processed. See dashboard for visualizations.
+Recommend products for customer 11000,product_recommendations,"{'time_period': '1100', 'customer_id': 11000}","Top 5 product recommendations for Customer #11000:
+  1.0. Product #480 (Score: 0.941)
+  2.0. Product..."
