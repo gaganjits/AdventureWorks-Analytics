@@ -535,23 +535,12 @@ Internal AdventureWorks project. All models, data, and code are proprietary.
 
 ## Contact & Support
 
-**Data Science Team:**
-- Email: analytics@adventureworks.com
-- Office: Building A, Floor 3
-- Office Hours: Tuesday/Thursday 2-4 PM
-
-**IT Support (Technical Issues):**
-- Email: it-support@adventureworks.com
-- Phone: ext. 1234
-- Hours: Monday-Friday 9 AM - 5 PM
-
-**Project Lead:**
-- [Your Name/Team Lead]
-- Email: [contact@adventureworks.com]
+Gaganjit Singh
+gaganjit.s99@gmail.com
 
 ---
 
-**Project Status:** ✅ ALL PHASES COMPLETE - PRODUCTION READY
+**Project Status:** ALL PHASES COMPLETE - PRODUCTION READY
 **Last Updated:** October 24, 2025
 **Version:** 1.0
 
