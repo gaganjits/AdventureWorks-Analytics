@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventureWorks — Product & Category Insights</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+</style>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c23;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5b4;
+    --accent2: #ff6b35;
+    --accent3: #7c6dfa;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --gold: #f5c842;
+    --bikes: #00e5b4;
+    --acc: #7c6dfa;
+    --cloth: #f5c842;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,180,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,180,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrapper { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:32px 24px; }
+
+  /* HEADER */
+  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:36px; gap:20px; flex-wrap:wrap; }
+  .eyebrow { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  h1 { font-family:'Outfit',sans-serif; font-size:clamp(22px,3vw,36px); font-weight:800; letter-spacing:-0.02em; line-height:1.1; color:#fff; }
+  h1 span { color:var(--accent); }
+
+  /* CATEGORY FILTER TABS */
+  .cat-tabs { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .cat-tab {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size:11px;
+    padding:6px 16px;
+    cursor:pointer;
+    transition:all 0.2s;
+    letter-spacing:0.05em;
+  }
+  .cat-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+  .cat-tab.active-all { background:var(--accent); color:#000; border-color:var(--accent); }
+  .cat-tab.active-bikes { background:var(--bikes); color:#000; border-color:var(--bikes); }
+  .cat-tab.active-acc { background:var(--acc); color:#fff; border-color:var(--acc); }
+  .cat-tab.active-cloth { background:var(--cloth); color:#000; border-color:var(--cloth); }
+
+  /* KPI STRIP */
+  .kpi-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); margin-bottom:24px; }
+  .kpi-card { background:var(--surface); padding:18px 20px 14px; position:relative; overflow:hidden; transition:background 0.2s; cursor:default; }
+  .kpi-card:hover { background:var(--surface2); }
+  .kpi-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--accent-color, var(--accent)); transform:scaleX(0); transform-origin:left; transition:transform 0.4s ease; }
+  .kpi-card:hover::after { transform:scaleX(1); }
+  .kpi-label { font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .kpi-value { font-family:'Outfit',sans-serif; font-size:clamp(16px,2.2vw,24px); font-weight:700; color:#fff; line-height:1; margin-bottom:5px; }
+  .kpi-sub { font-size:10px; color:var(--muted); }
+
+  /* GRID LAYOUT */
+  .grid-top { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-mid { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-bot { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); padding:22px; position:relative; animation:fadeUp 0.6s ease both; }
+  .card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; gap:10px; }
+  .card-title { font-family:'Outfit',sans-serif; font-size:13px; font-weight:700; color:#fff; }
+  .card-sub { font-size:10px; color:var(--muted); margin-top:3px; letter-spacing:0.04em; }
+  .card-badge { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; padding:4px 8px; border:1px solid var(--border); color:var(--muted); white-space:nowrap; flex-shrink:0; }
+
+  /* DRILL-DOWN TREE */
+  .drill-wrap { display:flex; gap:0; height:260px; }
+  .drill-col { flex:1; border-right:1px solid var(--border); overflow:hidden; display:flex; flex-direction:column; }
+  .drill-col:last-child { border-right:none; }
+  .drill-col-header { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); padding:0 12px 10px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .drill-list { overflow-y:auto; flex:1; padding:6px 0; }
+  .drill-list::-webkit-scrollbar { width:3px; }
+  .drill-list::-webkit-scrollbar-track { background:transparent; }
+  .drill-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); }
+  .drill-item {
+    padding:9px 12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    transition:background 0.15s;
+    border-left:2px solid transparent;
+  }
+  .drill-item:hover { background:rgba(255,255,255,0.04); }
+  .drill-item.selected { background:rgba(0,229,180,0.07); border-left-color:var(--accent); }
+  .drill-item-name { font-size:11px; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .drill-item.selected .drill-item-name { color:var(--accent); }
+  .drill-item-val { font-size:10px; color:var(--muted); flex-shrink:0; }
+  .drill-item.selected .drill-item-val { color:var(--accent); }
+  .drill-bar { height:2px; background:rgba(255,255,255,0.06); margin-top:3px; }
+  .drill-bar-fill { height:100%; background:var(--accent); transition:width 0.5s ease; }
+  .drill-detail { padding:12px; background:var(--surface2); border-top:1px solid var(--border); }
+  .drill-detail-title { font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; color:#fff; margin-bottom:8px; }
+  .drill-stat-row { display:flex; gap:16px; flex-wrap:wrap; }
+  .drill-stat { }
+  .drill-stat-label { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+  .drill-stat-val { font-size:12px; color:var(--accent); font-weight:500; }
+
+  /* PRODUCT TABLE */
+  .prod-table { width:100%; border-collapse:collapse; }
+  .prod-table th { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); text-align:left; padding:0 8px 10px 0; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .prod-table th:last-child, .prod-table td:last-child { text-align:right; }
+  .prod-table td { font-size:11px; padding:9px 8px 9px 0; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+  .prod-table tr { transition:background 0.15s; cursor:default; }
+  .prod-table tbody tr:hover { background:rgba(255,255,255,0.03); }
+  .prod-table tbody tr:hover td:first-child { color:var(--accent); }
+  .prod-name { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+  .prod-cat-badge { display:inline-block; font-size:9px; padding:2px 6px; letter-spacing:0.06em; }
+  .badge-bikes { background:rgba(0,229,180,0.1); color:var(--accent); }
+  .badge-acc { background:rgba(124,109,250,0.1); color:var(--accent3); }
+  .badge-cloth { background:rgba(245,200,66,0.1); color:var(--gold); }
+  .margin-bar-wrap { display:flex; align-items:center; gap:6px; }
+  .margin-bar { height:4px; background:rgba(255,255,255,0.06); flex:1; min-width:40px; overflow:hidden; }
+  .margin-bar-fill { height:100%; transition:width 0.6s ease; }
+  .rank-num { font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; color:var(--muted); width:18px; flex-shrink:0; }
+
+  /* RETURN RATE */
+  .ret-list { display:flex; flex-direction:column; gap:8px; }
+  .ret-item { cursor:default; }
+  .ret-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .ret-name { font-size:11px; color:var(--text); transition:color 0.15s; }
+  .ret-item:hover .ret-name { color:var(--accent2); }
+  .ret-pct { font-size:11px; font-weight:500; }
+  .ret-bar-bg { height:3px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .ret-bar-fill { height:100%; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); width:0; }
+
+  /* SCATTER / BUBBLE */
+  .scatter-wrap { position:relative; height:280px; }
+
+  /* HOVER DETAIL */
+  .hover-strip { display:flex; gap:20px; margin-top:12px; padding-top:10px; border-top:1px solid var(--border); min-height:28px; flex-wrap:wrap; align-items:center; }
+  .hover-stat { }
+  .hover-label { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+  .hover-val { font-family:'Outfit',sans-serif; font-size:13px; font-weight:700; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  .card:nth-child(1){animation-delay:0.1s} .card:nth-child(2){animation-delay:0.15s}
+  .card:nth-child(3){animation-delay:0.2s} .card:nth-child(4){animation-delay:0.25s}
+  .card:nth-child(5){animation-delay:0.3s} .card:nth-child(6){animation-delay:0.35s}
+
+  .footer-note { margin-top:24px; text-align:center; font-size:10px; color:rgba(107,114,128,0.4); letter-spacing:0.08em; }
+
+  @media(max-width:900px){
+    .grid-top,.grid-mid,.grid-bot{ grid-template-columns:1fr; }
+    .drill-wrap{ flex-direction:column; height:auto; }
+    .drill-col{ height:160px; border-right:none; border-bottom:1px solid var(--border); }
+  }
+
+  /* ── TOP MINI NAV ── */
+  .top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10,12,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    overflow-x: auto;
+  }
+  .top-nav::-webkit-scrollbar { display: none; }
+  .top-nav-home {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0 16px 0 0;
+    margin-right: 12px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .top-nav-home:hover { color: #00ffcc; }
+  .top-nav-link {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0 12px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+  .top-nav-link:hover { color: var(--text); }
+  .top-nav-link.current { color: var(--accent); border-bottom-color: var(--accent); }
+  .wrapper, .hero, section { padding-top: calc(var(--top, 0px) + 44px) !important; }
+
+</style>
+</head>
+<body>
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a href="AdventureWorks_index.html" class="top-nav-home">⌂ AdventureWorks</a>
+    <a href="AdventureWorks_Revenue_Growth_Dashboard.html" class="top-nav-link ">Revenue & Growth</a><a href="AdventureWorks_Product_Category_Insights.html" class="top-nav-link current">Product & Category</a><a href="AdventureWorks_Customer_Analytics.html" class="top-nav-link ">Customer Analytics</a><a href="AdventureWorks_Regional_Performance.html" class="top-nav-link ">Regional Performance</a><a href="AdventureWorks_Seasonality_Channels.html" class="top-nav-link ">Seasonality</a>
+  </nav>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="eyebrow">AdventureWorks Analytics · Product &amp; Category Insights</div>
+      <h1>Product<br>Performance <span>Deep Dive</span></h1>
+    </div>
+    <div class="cat-tabs">
+      <a href="AdventureWorks_index.html" class="cat-tab" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">⌂ Home</a>
+      <button class="cat-tab active-all" onclick="filterCat('all',this)">All Categories</button>
+      <button class="cat-tab" onclick="filterCat('Bikes',this)">Bikes</button>
+      <button class="cat-tab" onclick="filterCat('Accessories',this)">Accessories</button>
+      <button class="cat-tab" onclick="filterCat('Clothing',this)">Clothing</button>
+    </div>
+  </header>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip" id="kpi-strip">
+    <div class="kpi-card" style="--accent-color:var(--accent)">
+      <div class="kpi-label">Total Products</div>
+      <div class="kpi-value" id="k-products">293</div>
+      <div class="kpi-sub">Unique SKUs</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:var(--accent)">
+      <div class="kpi-label">Category Revenue</div>
+      <div class="kpi-value" id="k-rev">$24.9M</div>
+      <div class="kpi-sub" id="k-rev-sub">All categories</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:var(--gold)">
+      <div class="kpi-label">Avg Profit Margin</div>
+      <div class="kpi-value" id="k-margin">42.0%</div>
+      <div class="kpi-sub" id="k-margin-sub">Across all products</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:var(--accent3)">
+      <div class="kpi-label">Units Sold</div>
+      <div class="kpi-value" id="k-units">84,174</div>
+      <div class="kpi-sub" id="k-units-sub">Total order quantity</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:var(--accent2)">
+      <div class="kpi-label">Avg Return Rate</div>
+      <div class="kpi-value" id="k-ret">2.54%</div>
+      <div class="kpi-sub">Across subcategories</div>
+    </div>
+    <div class="kpi-card" style="--accent-color:var(--gold)">
+      <div class="kpi-label">Top Product</div>
+      <div class="kpi-value" style="font-size:14px" id="k-top">Mountain-200</div>
+      <div class="kpi-sub">By total revenue</div>
+    </div>
+  </div>
+
+  <!-- TOP ROW: Drilldown + Subcat chart -->
+  <div class="grid-top">
+
+    <!-- DRILL-DOWN -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue Drill-Down</div>
+          <div class="card-sub">Click category → see subcategories → see products</div>
+        </div>
+        <div class="card-badge">Interactive</div>
+      </div>
+      <div class="drill-wrap">
+        <div class="drill-col">
+          <div class="drill-col-header">Category</div>
+          <div class="drill-list" id="drill-cats"></div>
+        </div>
+        <div class="drill-col">
+          <div class="drill-col-header">Subcategory</div>
+          <div class="drill-list" id="drill-subcats"></div>
+        </div>
+        <div class="drill-col">
+          <div class="drill-col-header">Top Products</div>
+          <div class="drill-list" id="drill-prods"></div>
+        </div>
+      </div>
+      <div class="drill-detail" id="drill-detail">
+        <div class="drill-stat-row">
+          <div class="drill-stat"><div class="drill-stat-label">Selected</div><div class="drill-stat-val" id="dd-selected">All Categories</div></div>
+          <div class="drill-stat"><div class="drill-stat-label">Revenue</div><div class="drill-stat-val" id="dd-rev">$24.9M</div></div>
+          <div class="drill-stat"><div class="drill-stat-label">Units</div><div class="drill-stat-val" id="dd-units">84,174</div></div>
+          <div class="drill-stat"><div class="drill-stat-label">Margin</div><div class="drill-stat-val" id="dd-margin">42.0%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBCAT CHART -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Subcategory</div>
+          <div class="card-sub">Hover bars for detail</div>
+        </div>
+        <div class="card-badge">Bar Chart</div>
+      </div>
+      <div style="position:relative;height:260px">
+        <canvas id="subcatChart"></canvas>
+      </div>
+      <div class="hover-strip" id="subcat-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bars for detail</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MID ROW: Product table + Return rates -->
+  <div class="grid-mid">
+
+    <!-- TOP PRODUCTS TABLE -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top 15 Products by Revenue</div>
+          <div class="card-sub">Hover rows · sorted by total revenue</div>
+        </div>
+        <div class="card-badge">Ranked</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="prod-table">
+          <thead>
+            <tr>
+              <th style="width:22px">#</th>
+              <th>Product</th>
+              <th>Cat</th>
+              <th>Revenue</th>
+              <th>Units</th>
+              <th>Price</th>
+              <th>Margin</th>
+            </tr>
+          </thead>
+          <tbody id="prod-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RETURN RATES -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Return Rate by Subcategory</div>
+          <div class="card-sub">Returns ÷ units sold</div>
+        </div>
+        <div class="card-badge">Risk</div>
+      </div>
+      <div class="ret-list" id="ret-list"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM ROW: Price vs Margin scatter + Category margin chart -->
+  <div class="grid-bot">
+
+    <!-- SCATTER: Price vs Margin -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Price vs Profit Margin</div>
+          <div class="card-sub">Bubble size = units sold · hover for product detail</div>
+        </div>
+        <div class="card-badge">Scatter</div>
+      </div>
+      <div class="scatter-wrap">
+        <canvas id="scatterChart"></canvas>
+      </div>
+      <div class="hover-strip" id="scatter-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bubbles for product detail</div>
+      </div>
+    </div>
+
+    <!-- MARGIN BY CATEGORY -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Profit Margin Breakdown</div>
+          <div class="card-sub">By category and subcategory</div>
+        </div>
+        <div class="card-badge">Margin</div>
+      </div>
+      <div style="position:relative;height:280px">
+        <canvas id="marginChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">AdventureWorks Analytics · 293 Products · 4 Categories · 17 Subcategories · Built by Gaganjit Singh</div>
+</div>
+
+<script>
+// ─── RAW DATA ─────────────────────────────────────────────────────────────────
+const CAT_DATA = [
+  {CategoryName:'Bikes',    Revenue:23642495, Units:13929, Profit:9726168, Margin:41.1},
+  {CategoryName:'Accessories', Revenue:906673, Units:57809, Profit:569760, Margin:62.8},
+  {CategoryName:'Clothing', Revenue:365419, Units:12436, Profit:161787, Margin:44.3},
+];
+
+const SUBCAT_DATA = [
+  {CategoryName:'Bikes',        SubcategoryName:'Road Bikes',       Revenue:11287180, Units:7099,  Profit:4368347, Margin:38.7},
+  {CategoryName:'Bikes',        SubcategoryName:'Mountain Bikes',   Revenue:8583748,  Units:4706,  Profit:3930662, Margin:45.8},
+  {CategoryName:'Bikes',        SubcategoryName:'Touring Bikes',    Revenue:3771565,  Units:2124,  Profit:1427160, Margin:37.8},
+  {CategoryName:'Accessories',  SubcategoryName:'Tires and Tubes',  Revenue:380827,   Units:29772, Profit:238396,  Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Helmets',          Revenue:205834,   Units:6034,  Profit:131036,  Margin:63.7},
+  {CategoryName:'Accessories',  SubcategoryName:'Bottles and Cages',Revenue:107745,   Units:15106, Profit:67448,   Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Fenders',          Revenue:87041,    Units:3960,  Profit:54488,   Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Hydration Packs',  Revenue:38218,    Units:695,   Profit:23924,   Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Bike Stands',      Revenue:37206,    Units:234,   Profit:23291,   Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Bike Racks',       Revenue:36240,    Units:302,   Profit:22686,   Margin:62.6},
+  {CategoryName:'Accessories',  SubcategoryName:'Cleaners',         Revenue:13563,    Units:1706,  Profit:8490,    Margin:62.6},
+  {CategoryName:'Clothing',     SubcategoryName:'Jerseys',          Revenue:158565,   Units:3113,  Profit:44956,   Margin:28.4},
+  {CategoryName:'Clothing',     SubcategoryName:'Shorts',           Revenue:66071,    Units:944,   Profit:41360,   Margin:62.6},
+  {CategoryName:'Clothing',     SubcategoryName:'Gloves',           Revenue:62261,    Units:2644,  Profit:36578,   Margin:58.7},
+  {CategoryName:'Clothing',     SubcategoryName:'Caps',             Revenue:35882,    Units:4151,  Profit:12200,   Margin:34.0},
+  {CategoryName:'Clothing',     SubcategoryName:'Vests',            Revenue:33084,    Units:521,   Profit:20710,   Margin:62.6},
+  {CategoryName:'Clothing',     SubcategoryName:'Socks',            Revenue:9556,     Units:1063,  Profit:5982,    Margin:62.6},
+];
+
+const TOP_PRODUCTS = [
+  {ProductName:'Mountain-200 Black, 46', CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1241754, Units:606, Orders:606, ProductPrice:2049.10, ProductCost:1105.77, Margin:46.0},
+  {ProductName:'Mountain-200 Black, 42', CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1233557, Units:602, Orders:602, ProductPrice:2049.10, ProductCost:1105.77, Margin:46.0},
+  {ProductName:'Mountain-200 Silver, 38',CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1213852, Units:586, Orders:586, ProductPrice:2071.42, ProductCost:1118.54, Margin:46.0},
+  {ProductName:'Mountain-200 Silver, 46',CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1182781, Units:571, Orders:571, ProductPrice:2071.42, ProductCost:1118.54, Margin:46.0},
+  {ProductName:'Mountain-200 Black, 38', CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1165937, Units:569, Orders:569, ProductPrice:2049.10, ProductCost:1105.77, Margin:46.0},
+  {ProductName:'Mountain-200 Silver, 42',CategoryName:'Bikes', SubcategoryName:'Mountain Bikes', Revenue:1133067, Units:547, Orders:547, ProductPrice:2071.42, ProductCost:1118.54, Margin:46.0},
+  {ProductName:'Road-250 Black, 52',     CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:689374,  Units:316, Orders:316, ProductPrice:2181.56, ProductCost:1321.86, Margin:39.5},
+  {ProductName:'Road-250 Red, 58',       CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:661013,  Units:303, Orders:303, ProductPrice:2181.56, ProductCost:1321.86, Margin:39.5},
+  {ProductName:'Road-250 Black, 48',     CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:641379,  Units:294, Orders:294, ProductPrice:2181.56, ProductCost:1321.86, Margin:39.5},
+  {ProductName:'Road-150 Red, 48',       CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:640510,  Units:179, Orders:179, ProductPrice:3578.27, ProductCost:2171.29, Margin:39.3},
+  {ProductName:'Road-150 Red, 62',       CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:604728,  Units:169, Orders:169, ProductPrice:3578.27, ProductCost:2171.29, Margin:39.3},
+  {ProductName:'Road-150 Red, 52',       CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:601149,  Units:168, Orders:168, ProductPrice:3578.27, ProductCost:2171.29, Margin:39.3},
+  {ProductName:'Road-250 Black, 58',     CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:584659,  Units:268, Orders:268, ProductPrice:2181.56, ProductCost:1321.86, Margin:39.5},
+  {ProductName:'Road-250 Black, 44',     CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:573751,  Units:263, Orders:263, ProductPrice:2181.56, ProductCost:1321.86, Margin:39.5},
+  {ProductName:'Road-150 Red, 56',       CategoryName:'Bikes', SubcategoryName:'Road Bikes',     Revenue:561788,  Units:157, Orders:157, ProductPrice:3578.27, ProductCost:2171.29, Margin:39.3},
+];
+
+const RETURN_RATES = [
+  {SubcategoryName:'Shorts',          ReturnQuantity:40,  OrderQuantity:944,   ReturnRate:4.24},
+  {SubcategoryName:'Vests',           ReturnQuantity:19,  OrderQuantity:521,   ReturnRate:3.65},
+  {SubcategoryName:'Hydration Packs', ReturnQuantity:25,  OrderQuantity:695,   ReturnRate:3.60},
+  {SubcategoryName:'Bike Stands',     ReturnQuantity:8,   OrderQuantity:234,   ReturnRate:3.42},
+  {SubcategoryName:'Touring Bikes',   ReturnQuantity:70,  OrderQuantity:2124,  ReturnRate:3.30},
+  {SubcategoryName:'Road Bikes',      ReturnQuantity:223, OrderQuantity:7099,  ReturnRate:3.14},
+  {SubcategoryName:'Helmets',         ReturnQuantity:188, OrderQuantity:6034,  ReturnRate:3.12},
+  {SubcategoryName:'Jerseys',         ReturnQuantity:93,  OrderQuantity:3113,  ReturnRate:2.99},
+  {SubcategoryName:'Mountain Bikes',  ReturnQuantity:136, OrderQuantity:4706,  ReturnRate:2.89},
+  {SubcategoryName:'Bike Racks',      ReturnQuantity:8,   OrderQuantity:302,   ReturnRate:2.65},
+  {SubcategoryName:'Socks',           ReturnQuantity:22,  OrderQuantity:1063,  ReturnRate:2.07},
+  {SubcategoryName:'Bottles/Cages',   ReturnQuantity:288, OrderQuantity:15106, ReturnRate:1.91},
+  {SubcategoryName:'Gloves',          ReturnQuantity:49,  OrderQuantity:2644,  ReturnRate:1.85},
+  {SubcategoryName:'Tires/Tubes',     ReturnQuantity:534, OrderQuantity:29772, ReturnRate:1.79},
+  {SubcategoryName:'Cleaners',        ReturnQuantity:25,  OrderQuantity:1706,  ReturnRate:1.47},
+  {SubcategoryName:'Fenders',         ReturnQuantity:54,  OrderQuantity:3960,  ReturnRate:1.36},
+  {SubcategoryName:'Caps',            ReturnQuantity:46,  OrderQuantity:4151,  ReturnRate:1.11},
+];
+
+// Scatter data — sampled representative products
+const SCATTER_DATA = [
+  // Bikes - high price
+  {name:'Road-150 Red',      cat:'Bikes', price:3578, margin:39.3, units:800},
+  {name:'Mountain-200 Black',cat:'Bikes', price:2049, margin:46.0, units:3494},
+  {name:'Road-250 Black',    cat:'Bikes', price:2182, margin:39.5, units:1744},
+  {name:'Touring-1000 Yellow',cat:'Bikes',price:2384, margin:35.1, units:284},
+  {name:'Road-350-W Yellow', cat:'Bikes', price:1700, margin:40.2, units:312},
+  {name:'Mountain-500 Black',cat:'Bikes', price:539,  margin:26.3, units:220},
+  {name:'Road-650 Red',      cat:'Bikes', price:783,  margin:35.8, units:410},
+  // Accessories - low price, high margin
+  {name:'Helmet (various)',  cat:'Accessories', price:35,  margin:63.7, units:6034},
+  {name:'Tires/Tubes',       cat:'Accessories', price:9,   margin:62.6, units:29772},
+  {name:'Bottles/Cages',     cat:'Accessories', price:9,   margin:62.6, units:15106},
+  {name:'Fenders',           cat:'Accessories', price:22,  margin:62.6, units:3960},
+  {name:'Hydration Pack',    cat:'Accessories', price:55,  margin:62.6, units:695},
+  {name:'Bike Stand',        cat:'Accessories', price:159, margin:62.6, units:234},
+  {name:'Bike Rack',         cat:'Accessories', price:120, margin:62.6, units:302},
+  // Clothing - mid price, varied margin
+  {name:'Jerseys',           cat:'Clothing', price:51,  margin:28.4, units:3113},
+  {name:'Shorts',            cat:'Clothing', price:70,  margin:62.6, units:944},
+  {name:'Gloves',            cat:'Clothing', price:24,  margin:58.7, units:2644},
+  {name:'Caps',              cat:'Clothing', price:8,   margin:34.0, units:4151},
+  {name:'Vests',             cat:'Clothing', price:64,  margin:62.6, units:521},
+  {name:'Socks',             cat:'Clothing', price:9,   margin:62.6, units:1063},
+];
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const fmt = v => v >= 1e6 ? `$${(v/1e6).toFixed(1)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(0)}K` : `$${v.toFixed(0)}`;
+const fmtN = v => v >= 1e3 ? `${(v/1e3).toFixed(1)}K` : v.toLocaleString();
+const CAT_COLORS = { Bikes: '#00e5b4', Accessories: '#7c6dfa', Clothing: '#f5c842' };
+const tooltipStyle = {
+  backgroundColor:'rgba(10,12,16,0.97)',
+  borderColor:'rgba(0,229,180,0.25)',
+  borderWidth:1,
+  titleColor:'#fff',
+  bodyColor:'#9ca3af',
+  titleFont:{family:'Outfit',size:12,weight:'700'},
+  bodyFont:{family:'Source Sans 3',size:11},
+  padding:12,
+  cornerRadius:0,
+};
+let activeFilter = 'all';
+let charts = {};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let selectedCat = null;
+let selectedSubcat = null;
+
+// ─── FILTER ──────────────────────────────────────────────────────────────────
+function filterCat(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => {
+    b.className = 'cat-tab';
+  });
+  const classMap = { all:'active-all', Bikes:'active-bikes', Accessories:'active-acc', Clothing:'active-cloth' };
+  btn.classList.add(classMap[cat]);
+  updateKPIs(cat);
+  buildSubcatChart(cat);
+  buildProductTable(cat);
+  buildReturnList(cat);
+  buildScatter(cat);
+  buildMarginChart(cat);
+  // Reset drill
+  selectedCat = cat === 'all' ? null : cat;
+  selectedSubcat = null;
+  buildDrill();
+}
+
+// ─── KPIs ─────────────────────────────────────────────────────────────────────
+function updateKPIs(cat) {
+  const cats = cat === 'all' ? CAT_DATA : CAT_DATA.filter(c => c.CategoryName === cat);
+  const subcats = cat === 'all' ? SUBCAT_DATA : SUBCAT_DATA.filter(s => s.CategoryName === cat);
+  const rev = cats.reduce((s,c) => s+c.Revenue, 0);
+  const units = cats.reduce((s,c) => s+c.Units, 0);
+  const avgMargin = (cats.reduce((s,c) => s+c.Margin, 0)/cats.length).toFixed(1);
+  const rets = RETURN_RATES;
+  const avgRet = (rets.reduce((s,r) => s+r.ReturnRate, 0)/rets.length).toFixed(2);
+  const topProd = cat === 'all' ? 'Mountain-200' : cat === 'Bikes' ? 'Mountain-200' : cat === 'Accessories' ? 'Helmet' : 'Jerseys';
+
+  document.getElementById('k-products').textContent = cat === 'all' ? '293' : cat === 'Bikes' ? '97' : cat === 'Accessories' ? '136' : '60';
+  document.getElementById('k-rev').textContent = fmt(rev);
+  document.getElementById('k-rev-sub').textContent = cat === 'all' ? 'All categories' : cat;
+  document.getElementById('k-margin').textContent = avgMargin + '%';
+  document.getElementById('k-margin-sub').textContent = 'Avg across subcats';
+  document.getElementById('k-units').textContent = fmtN(units);
+  document.getElementById('k-units-sub').textContent = 'Units sold';
+  document.getElementById('k-ret').textContent = avgRet + '%';
+  document.getElementById('k-top').textContent = topProd;
+}
+
+// ─── DRILL DOWN ──────────────────────────────────────────────────────────────
+function buildDrill() {
+  const catList = document.getElementById('drill-cats');
+  const subcatList = document.getElementById('drill-subcats');
+  const prodList = document.getElementById('drill-prods');
+  const maxCatRev = Math.max(...CAT_DATA.map(c => c.Revenue));
+
+  catList.innerHTML = CAT_DATA.map(c => `
+    <div class="drill-item ${selectedCat === c.CategoryName ? 'selected' : ''}" onclick="selectCat('${c.CategoryName}')">
+      <div>
+        <div class="drill-item-name">${c.CategoryName}</div>
+        <div class="drill-bar"><div class="drill-bar-fill" style="width:${(c.Revenue/maxCatRev*100).toFixed(0)}%;background:${CAT_COLORS[c.CategoryName]}"></div></div>
+      </div>
+      <div class="drill-item-val">${fmt(c.Revenue)}</div>
+    </div>`).join('');
+
+  if (selectedCat) {
+    const subcats = SUBCAT_DATA.filter(s => s.CategoryName === selectedCat);
+    const maxRev = Math.max(...subcats.map(s => s.Revenue));
+    subcatList.innerHTML = subcats.map(s => `
+      <div class="drill-item ${selectedSubcat === s.SubcategoryName ? 'selected' : ''}" onclick="selectSubcat('${s.SubcategoryName}')">
+        <div>
+          <div class="drill-item-name">${s.SubcategoryName}</div>
+          <div class="drill-bar"><div class="drill-bar-fill" style="width:${(s.Revenue/maxRev*100).toFixed(0)}%;background:${CAT_COLORS[selectedCat]}"></div></div>
+        </div>
+        <div class="drill-item-val">${fmt(s.Revenue)}</div>
+      </div>`).join('');
+  } else {
+    subcatList.innerHTML = '<div style="padding:16px 12px;font-size:11px;color:var(--muted)">← select a category</div>';
+  }
+
+  if (selectedSubcat) {
+    const prods = TOP_PRODUCTS.filter(p => p.SubcategoryName === selectedSubcat).slice(0,8);
+    const maxRev = prods.length ? Math.max(...prods.map(p => p.Revenue)) : 1;
+    prodList.innerHTML = prods.length
+      ? prods.map(p => `
+        <div class="drill-item" onclick="">
+          <div style="flex:1;min-width:0">
+            <div class="drill-item-name">${p.ProductName}</div>
+            <div class="drill-bar"><div class="drill-bar-fill" style="width:${(p.Revenue/maxRev*100).toFixed(0)}%;background:${CAT_COLORS[p.CategoryName]}"></div></div>
+          </div>
+          <div class="drill-item-val">${fmt(p.Revenue)}</div>
+        </div>`).join('')
+      : '<div style="padding:16px 12px;font-size:11px;color:var(--muted)">No products in top 15</div>';
+  } else {
+    prodList.innerHTML = '<div style="padding:16px 12px;font-size:11px;color:var(--muted)">← select a subcategory</div>';
+  }
+
+  updateDrillDetail();
+}
+
+function selectCat(cat) {
+  selectedCat = selectedCat === cat ? null : cat;
+  selectedSubcat = null;
+  buildDrill();
+}
+
+function selectSubcat(sub) {
+  selectedSubcat = selectedSubcat === sub ? null : sub;
+  buildDrill();
+}
+
+function updateDrillDetail() {
+  let label, rev, units, margin;
+  if (selectedSubcat) {
+    const s = SUBCAT_DATA.find(x => x.SubcategoryName === selectedSubcat);
+    label = selectedSubcat; rev = s.Revenue; units = s.Units; margin = s.Margin;
+  } else if (selectedCat) {
+    const c = CAT_DATA.find(x => x.CategoryName === selectedCat);
+    label = selectedCat; rev = c.Revenue; units = c.Units; margin = c.Margin;
+  } else {
+    label = 'All Categories';
+    rev = CAT_DATA.reduce((s,c)=>s+c.Revenue,0);
+    units = CAT_DATA.reduce((s,c)=>s+c.Units,0);
+    margin = 42.0;
+  }
+  document.getElementById('dd-selected').textContent = label;
+  document.getElementById('dd-rev').textContent = fmt(rev);
+  document.getElementById('dd-units').textContent = fmtN(units);
+  document.getElementById('dd-margin').textContent = margin.toFixed(1) + '%';
+}
+
+// ─── SUBCAT CHART ─────────────────────────────────────────────────────────────
+function buildSubcatChart(cat) {
+  const data = cat === 'all' ? SUBCAT_DATA : SUBCAT_DATA.filter(s => s.CategoryName === cat);
+  const sorted = [...data].sort((a,b) => b.Revenue - a.Revenue).slice(0,10);
+  const ctx = document.getElementById('subcatChart').getContext('2d');
+  const barColors = sorted.map(s => CAT_COLORS[s.CategoryName] + 'cc');
+  const hoverColors = sorted.map(s => CAT_COLORS[s.CategoryName]);
+
+  if (charts.subcat) charts.subcat.destroy();
+  charts.subcat = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: sorted.map(s => s.SubcategoryName),
+      datasets:[{
+        data: sorted.map(s => s.Revenue),
+        backgroundColor: barColors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius:2,
+        borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external:({chart,tooltip}) => {
+            const strip = document.getElementById('subcat-strip');
+            if (tooltip.opacity===0 || !tooltip.dataPoints?.length) {
+              strip.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bars for detail</div>';
+              return;
+            }
+            const d = tooltip.dataPoints[0];
+            const sub = sorted[d.dataIndex];
+            strip.innerHTML = `<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+              <div><div class="hover-label">Subcategory</div><div class="hover-val" style="color:${CAT_COLORS[sub.CategoryName]};font-size:13px">${sub.SubcategoryName}</div></div>
+              <div><div class="hover-label">Revenue</div><div class="hover-val" style="color:var(--accent)">${fmt(sub.Revenue)}</div></div>
+              <div><div class="hover-label">Units Sold</div><div class="hover-val" style="color:var(--text)">${fmtN(sub.Units)}</div></div>
+              <div><div class="hover-label">Profit</div><div class="hover-val" style="color:var(--gold)">${fmt(sub.Profit)}</div></div>
+              <div><div class="hover-label">Margin</div><div class="hover-val" style="color:var(--accent3)">${sub.Margin}%</div></div>
+            </div>`;
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}},
+        y:{grid:{display:false},ticks:{color:'#9ca3af',font:{family:'Source Sans 3',size:10}},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── PRODUCT TABLE ───────────────────────────────────────────────────────────
+function buildProductTable(cat) {
+  const prods = cat === 'all' ? TOP_PRODUCTS : TOP_PRODUCTS.filter(p => p.CategoryName === cat);
+  const maxRev = Math.max(...prods.map(p => p.Revenue));
+  const body = document.getElementById('prod-table-body');
+  body.innerHTML = prods.slice(0,15).map((p,i) => {
+    const badgeCls = p.CategoryName==='Bikes' ? 'badge-bikes' : p.CategoryName==='Accessories' ? 'badge-acc' : 'badge-cloth';
+    const short = p.CategoryName==='Bikes' ? 'BK' : p.CategoryName==='Accessories' ? 'AC' : 'CL';
+    const marginColor = p.Margin > 50 ? '#00e5b4' : p.Margin > 40 ? '#f5c842' : '#ff6b35';
+    return `<tr>
+      <td><span class="rank-num">${i+1}</span></td>
+      <td><span class="prod-name" title="${p.ProductName}">${p.ProductName}</span></td>
+      <td><span class="prod-cat-badge ${badgeCls}">${short}</span></td>
+      <td style="color:var(--text)">${fmt(p.Revenue)}</td>
+      <td style="color:var(--muted)">${fmtN(p.Units)}</td>
+      <td style="color:var(--muted)">$${p.ProductPrice.toFixed(0)}</td>
+      <td>
+        <div class="margin-bar-wrap">
+          <div class="margin-bar"><div class="margin-bar-fill" style="width:${p.Margin}%;background:${marginColor}"></div></div>
+          <span style="font-size:10px;color:${marginColor};min-width:32px;text-align:right">${p.Margin}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── RETURN RATES ─────────────────────────────────────────────────────────────
+function buildReturnList(cat) {
+  const maxRate = Math.max(...RETURN_RATES.map(r => r.ReturnRate));
+  const list = document.getElementById('ret-list');
+  list.innerHTML = RETURN_RATES.map(r => {
+    const color = r.ReturnRate > 3.5 ? '#ff6b35' : r.ReturnRate > 2.5 ? '#f5c842' : '#00e5b4';
+    return `<div class="ret-item">
+      <div class="ret-top">
+        <span class="ret-name">${r.SubcategoryName}</span>
+        <span class="ret-pct" style="color:${color}">${r.ReturnRate}%</span>
+      </div>
+      <div class="ret-bar-bg">
+        <div class="ret-bar-fill" data-w="${(r.ReturnRate/maxRate*100).toFixed(1)}" style="background:${color}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  setTimeout(() => {
+    document.querySelectorAll('.ret-bar-fill').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 400);
+}
+
+// ─── SCATTER CHART ───────────────────────────────────────────────────────────
+function buildScatter(cat) {
+  const data = cat === 'all' ? SCATTER_DATA : SCATTER_DATA.filter(d => d.cat === cat);
+  const maxUnits = Math.max(...data.map(d => d.units));
+
+  const datasets = ['Bikes','Accessories','Clothing']
+    .filter(c => cat === 'all' || c === cat)
+    .map(c => ({
+      label: c,
+      data: data.filter(d => d.cat === c).map(d => ({
+        x: d.price,
+        y: d.margin,
+        r: Math.max(4, Math.sqrt(d.units / maxUnits) * 28),
+        name: d.name,
+        units: d.units,
+        price: d.price,
+        margin: d.margin,
+      })),
+      backgroundColor: CAT_COLORS[c] + '55',
+      borderColor: CAT_COLORS[c] + 'aa',
+      borderWidth: 1.5,
+      hoverBackgroundColor: CAT_COLORS[c] + 'aa',
+      hoverBorderColor: CAT_COLORS[c],
+      hoverBorderWidth: 2,
+    }));
+
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+  if (charts.scatter) charts.scatter.destroy();
+  charts.scatter = new Chart(ctx, {
+    type:'bubble',
+    data:{ datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:true},
+      plugins:{
+        legend:{
+          display: cat === 'all',
+          position:'top', align:'end',
+          labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:12,usePointStyle:true}
+        },
+        tooltip:{
+          enabled:false,
+          external:({chart,tooltip}) => {
+            const strip = document.getElementById('scatter-strip');
+            if (tooltip.opacity===0 || !tooltip.dataPoints?.length) {
+              strip.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bubbles for product detail</div>';
+              return;
+            }
+            const pt = tooltip.dataPoints[0].raw;
+            const catColor = CAT_COLORS[tooltip.dataPoints[0].dataset.label];
+            strip.innerHTML = `<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+              <div><div class="hover-label">Product</div><div class="hover-val" style="color:${catColor};font-size:12px">${pt.name}</div></div>
+              <div><div class="hover-label">Price</div><div class="hover-val" style="color:var(--accent)">$${pt.price.toLocaleString()}</div></div>
+              <div><div class="hover-label">Margin</div><div class="hover-val" style="color:var(--gold)">${pt.margin}%</div></div>
+              <div><div class="hover-label">Units Sold</div><div class="hover-val" style="color:var(--text)">${fmtN(pt.units)}</div></div>
+            </div>`;
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(255,255,255,0.04)'},
+          ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>`$${v.toLocaleString()}`},
+          border:{display:false},
+          title:{display:true,text:'Product Price (USD)',color:'#6b7280',font:{family:'Source Sans 3',size:10}}
+        },
+        y:{
+          grid:{color:'rgba(255,255,255,0.04)'},
+          ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>`${v}%`},
+          border:{display:false},
+          title:{display:true,text:'Profit Margin %',color:'#6b7280',font:{family:'Source Sans 3',size:10}}
+        }
+      }
+    }
+  });
+}
+
+// ─── MARGIN CHART ────────────────────────────────────────────────────────────
+function buildMarginChart(cat) {
+  const data = cat === 'all' ? SUBCAT_DATA : SUBCAT_DATA.filter(s => s.CategoryName === cat);
+  const sorted = [...data].sort((a,b) => b.Margin - a.Margin);
+  const ctx = document.getElementById('marginChart').getContext('2d');
+  const colors = sorted.map(s => {
+    const c = CAT_COLORS[s.CategoryName];
+    return c + (s.Margin > 55 ? 'ee' : s.Margin > 40 ? 'aa' : '77');
+  });
+
+  if (charts.margin) charts.margin.destroy();
+  charts.margin = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: sorted.map(s => s.SubcategoryName),
+      datasets:[{
+        data: sorted.map(s => s.Margin),
+        backgroundColor: colors,
+        hoverBackgroundColor: sorted.map(s => CAT_COLORS[s.CategoryName]),
+        borderRadius:2,
+        borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          ...tooltipStyle,
+          callbacks:{
+            title: ctx => ctx[0].label,
+            label: ctx => {
+              const sub = sorted[ctx.dataIndex];
+              return [` Margin: ${sub.Margin}%`, ` Revenue: ${fmt(sub.Revenue)}`];
+            },
+            labelColor: ctx => {
+              const c = CAT_COLORS[sorted[ctx.dataIndex].CategoryName];
+              return {borderColor:c,backgroundColor:c};
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(255,255,255,0.04)'},
+          ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>`${v}%`},
+          border:{display:false},
+          max:75,
+        },
+        y:{grid:{display:false},ticks:{color:'#9ca3af',font:{family:'Source Sans 3',size:9}},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateKPIs('all');
+  buildDrill();
+  buildSubcatChart('all');
+  buildProductTable('all');
+  buildReturnList('all');
+  buildScatter('all');
+  buildMarginChart('all');
+});
+</script>
+</body>
+</html>

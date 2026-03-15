@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventureWorks — Regional Performance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+</style>
+<style>
+  :root {
+    --bg:#0a0c10; --surface:#111318; --surface2:#181c23;
+    --border:rgba(255,255,255,0.07);
+    --accent:#00e5b4; --accent2:#ff6b35; --accent3:#7c6dfa;
+    --text:#e8eaf0; --muted:#6b7280; --gold:#f5c842;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,229,180,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,180,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrapper{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:32px 24px;}
+
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;gap:20px;flex-wrap:wrap;}
+  .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  h1{font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,36px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;color:#fff;}
+  h1 span{color:var(--accent);}
+
+  /* REGION SELECTOR */
+  .region-pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .rpill{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Source Sans 3',sans-serif;font-size:10px;padding:5px 12px;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;}
+  .rpill:hover{color:var(--text);border-color:rgba(255,255,255,0.2);}
+  .rpill.active{color:#000;border-color:transparent;}
+
+  /* KPI */
+  .kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px;}
+  .kpi-card{background:var(--surface);padding:18px 20px 14px;position:relative;overflow:hidden;transition:background 0.2s;}
+  .kpi-card:hover{background:var(--surface2);}
+  .kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+  .kpi-card:hover::after{transform:scaleX(1);}
+  .kpi-label{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .kpi-value{font-family:'Outfit',sans-serif;font-size:clamp(16px,2.2vw,24px);font-weight:700;color:#fff;line-height:1;margin-bottom:5px;}
+  .kpi-sub{font-size:10px;color:var(--muted);}
+
+  /* GRIDS */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-32{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);padding:22px;animation:fadeUp 0.6s ease both;}
+  .card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:10px;}
+  .card-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#fff;}
+  .card-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+  .card-badge{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+  .hover-strip{display:flex;gap:20px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);min-height:28px;flex-wrap:wrap;align-items:center;}
+  .h-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+  .h-val{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;}
+
+  /* REGION CARDS */
+  .region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:16px;}
+  .region-card{
+    background:var(--surface);border:1px solid var(--border);
+    padding:16px 18px;cursor:pointer;transition:all 0.2s;
+    position:relative;overflow:hidden;
+  }
+  .region-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;}
+  .region-card:hover{border-color:rgba(255,255,255,0.18);background:var(--surface2);}
+  .region-card.selected{border-color:var(--rc,var(--accent));}
+  .region-card.selected::before{opacity:0.04;background:var(--rc,var(--accent));}
+  .rc-flag{font-size:20px;margin-bottom:8px;}
+  .rc-name{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .rc-country{font-size:10px;color:var(--muted);margin-bottom:10px;}
+  .rc-rev{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:2px;}
+  .rc-sub{font-size:10px;color:var(--muted);}
+  .rc-bar{height:2px;background:rgba(255,255,255,0.06);margin-top:10px;overflow:hidden;}
+  .rc-bar-fill{height:100%;transition:width 1s cubic-bezier(0.4,0,0.2,1);width:0;}
+  .rc-rank{position:absolute;top:12px;right:14px;font-size:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:700;}
+
+  /* CONTINENT SPLIT */
+  .cont-split{display:flex;height:10px;overflow:hidden;margin-bottom:14px;}
+  .cont-seg{height:100%;transition:width 1s ease;cursor:default;}
+  .cont-seg:hover{opacity:0.8;}
+  .cont-legend{display:flex;gap:20px;flex-wrap:wrap;}
+  .cont-leg{display:flex;align-items:center;gap:6px;font-size:11px;cursor:default;}
+  .cont-dot{width:8px;height:8px;border-radius:50%;}
+
+  /* CATEGORY MIX TABLE */
+  .mix-table{width:100%;border-collapse:collapse;}
+  .mix-table th{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 8px 10px 0;border-bottom:1px solid var(--border);}
+  .mix-table td{font-size:11px;padding:9px 8px 9px 0;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+  .mix-table tr{transition:background 0.15s;}
+  .mix-table tbody tr:hover{background:rgba(255,255,255,0.03);}
+  .cat-pill{display:inline-block;font-size:9px;padding:2px 7px;letter-spacing:0.06em;}
+  .pill-bikes{background:rgba(0,229,180,0.1);color:var(--accent);}
+  .pill-acc{background:rgba(124,109,250,0.1);color:var(--accent3);}
+  .pill-cloth{background:rgba(245,200,66,0.1);color:var(--gold);}
+
+  /* RETURN RATE */
+  .ret-list{display:flex;flex-direction:column;gap:9px;}
+  .ret-item{cursor:default;}
+  .ret-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .ret-name{font-size:11px;color:var(--text);transition:color 0.15s;}
+  .ret-item:hover .ret-name{color:var(--accent);}
+  .ret-pct{font-size:11px;font-weight:500;}
+  .ret-bar-bg{height:3px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .ret-bar-fill{height:100%;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0;}
+
+  /* YOY TABLE */
+  .yoy-table{width:100%;border-collapse:collapse;}
+  .yoy-table th{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 6px 10px 0;border-bottom:1px solid var(--border);}
+  .yoy-table td{font-size:11px;padding:9px 6px 9px 0;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+  .yoy-table tr{transition:background 0.15s;}
+  .yoy-table tbody tr:hover{background:rgba(255,255,255,0.03);}
+  .growth-up{color:var(--accent);}
+  .growth-dn{color:var(--accent2);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .card:nth-child(1){animation-delay:0.1s}.card:nth-child(2){animation-delay:0.15s}
+  .card:nth-child(3){animation-delay:0.2s}.card:nth-child(4){animation-delay:0.25s}
+  .card:nth-child(5){animation-delay:0.3s}.card:nth-child(6){animation-delay:0.35s}
+
+  .footer-note{margin-top:24px;text-align:center;font-size:10px;color:rgba(107,114,128,0.4);letter-spacing:0.08em;}
+  @media(max-width:900px){.grid-2,.grid-3,.grid-32{grid-template-columns:1fr;}}
+
+  /* ── TOP MINI NAV ── */
+  .top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10,12,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    overflow-x: auto;
+  }
+  .top-nav::-webkit-scrollbar { display: none; }
+  .top-nav-home {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0 16px 0 0;
+    margin-right: 12px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .top-nav-home:hover { color: #00ffcc; }
+  .top-nav-link {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0 12px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+  .top-nav-link:hover { color: var(--text); }
+  .top-nav-link.current { color: var(--accent); border-bottom-color: var(--accent); }
+  .wrapper, .hero, section { padding-top: calc(var(--top, 0px) + 44px) !important; }
+
+</style>
+</head>
+<body>
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a href="AdventureWorks_index.html" class="top-nav-home">⌂ AdventureWorks</a>
+    <a href="AdventureWorks_Revenue_Growth_Dashboard.html" class="top-nav-link ">Revenue & Growth</a><a href="AdventureWorks_Product_Category_Insights.html" class="top-nav-link ">Product & Category</a><a href="AdventureWorks_Customer_Analytics.html" class="top-nav-link ">Customer Analytics</a><a href="AdventureWorks_Regional_Performance.html" class="top-nav-link current">Regional Performance</a><a href="AdventureWorks_Seasonality_Channels.html" class="top-nav-link ">Seasonality</a>
+  </nav>
+<div class="wrapper">
+
+  <header>
+    <div>
+      <div class="eyebrow">AdventureWorks Analytics · Regional Performance</div>
+      <h1>Global Revenue<br><span>by Territory</span></h1>
+    </div>
+    <div class="region-pills" id="region-pills"></div>
+  </header>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="k-rev">$24.9M</div>
+      <div class="kpi-sub" id="k-rev-sub">10 territories</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">Top Region</div>
+      <div class="kpi-value" style="font-size:15px" id="k-top">Australia</div>
+      <div class="kpi-sub" id="k-top-sub">$7.4M · 29.8%</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent3)">
+      <div class="kpi-label">Top Continent</div>
+      <div class="kpi-value" style="font-size:15px" id="k-cont">N. America</div>
+      <div class="kpi-sub" id="k-cont-sub">$9.7M · 39.0%</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Regions Active</div>
+      <div class="kpi-value" id="k-regions">7</div>
+      <div class="kpi-sub">Revenue > $100K</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent2)">
+      <div class="kpi-label">Avg Return Rate</div>
+      <div class="kpi-value" id="k-ret">2.16%</div>
+      <div class="kpi-sub">Across regions</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">Avg Margin</div>
+      <div class="kpi-value">42.0%</div>
+      <div class="kpi-sub">Consistent globally</div>
+    </div>
+  </div>
+
+  <!-- REGION CARDS -->
+  <div class="region-grid" id="region-grid"></div>
+
+  <!-- ROW 1: Revenue trend by region + continent split -->
+  <div class="grid-32">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Revenue by Region</div>
+          <div class="card-sub">Jan 2015 – Jun 2017 · top 7 territories · hover for detail</div>
+        </div>
+        <div class="card-badge">Time Series</div>
+      </div>
+      <div style="position:relative;height:240px">
+        <canvas id="trendChart"></canvas>
+      </div>
+      <div class="hover-strip" id="trend-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover chart to inspect a month</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Continent</div>
+          <div class="card-sub">3 continental zones</div>
+        </div>
+        <div class="card-badge">Continent</div>
+      </div>
+      <div style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Revenue Share</div>
+      <div class="cont-split" id="cont-split"></div>
+      <div class="cont-legend" id="cont-legend"></div>
+      <div style="margin-top:20px;position:relative;height:160px">
+        <canvas id="contChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: YoY by region + Category mix + Returns -->
+  <div class="grid-3">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">YoY Revenue by Region</div>
+          <div class="card-sub">Top 5 · hover for growth rates</div>
+        </div>
+        <div class="card-badge">YoY</div>
+      </div>
+      <div style="position:relative;height:240px">
+        <canvas id="yoyChart"></canvas>
+      </div>
+      <div class="hover-strip" id="yoy-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to see growth</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Category Mix by Region</div>
+          <div class="card-sub">Bikes · Accessories · Clothing</div>
+        </div>
+        <div class="card-badge">Mix</div>
+      </div>
+      <table class="mix-table">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>Bikes</th>
+            <th>Acc.</th>
+            <th>Clothing</th>
+          </tr>
+        </thead>
+        <tbody id="mix-table"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Return Rate by Region</div>
+          <div class="card-sub">Returns ÷ units sold</div>
+        </div>
+        <div class="card-badge">Returns</div>
+      </div>
+      <div class="ret-list" id="ret-list"></div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">AdventureWorks Analytics · 10 Territories · 3 Continents · Built by Gaganjit Singh</div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const REGIONS = [
+  {name:'Australia',    country:'Australia',       continent:'Pacific',       revenue:7416456, orders:6060, customers:3480, units:17951, margin:41.5, color:'#00e5b4'},
+  {name:'Southwest',   country:'United States',    continent:'North America', revenue:4822795, orders:4992, customers:4134, units:17191, margin:42.3, color:'#7c6dfa'},
+  {name:'Northwest',   country:'United States',    continent:'North America', revenue:3095074, orders:3675, customers:3075, units:12513, margin:42.5, color:'#f5c842'},
+  {name:'United Kingdom',country:'United Kingdom', continent:'Europe',        revenue:2902562, orders:2771, customers:1822, units:9694,  margin:41.9, color:'#ff6b35'},
+  {name:'Germany',     country:'Germany',           continent:'Europe',        revenue:2524680, orders:2294, customers:1675, units:7950,  margin:41.8, color:'#38bdf8'},
+  {name:'France',      country:'France',            continent:'Europe',        revenue:2362643, orders:2315, customers:1705, units:7862,  margin:41.9, color:'#e879f9'},
+  {name:'Canada',      country:'Canada',            continent:'North America', revenue:1769246, orders:3024, customers:1499, units:10894, margin:42.8, color:'#4ade80'},
+];
+
+const FLAGS = {Australia:'🇦🇺',Southwest:'🇺🇸',Northwest:'🇺🇸','United Kingdom':'🇬🇧',Germany:'🇩🇪',France:'🇫🇷',Canada:'🇨🇦'};
+
+const CONTINENTS = [
+  {name:'North America', revenue:9708245, color:'#7c6dfa'},
+  {name:'Europe',        revenue:7789885, color:'#38bdf8'},
+  {name:'Pacific',       revenue:7416456, color:'#00e5b4'},
+];
+
+const YOY = [
+  {region:'Australia',    y2015:2120665, y2016:2887687, y2017:2408105},
+  {region:'Southwest',    y2015:1264208, y2016:1647370, y2017:1911217},
+  {region:'Northwest',    y2015:834501,  y2016:1051683, y2017:1208891},
+  {region:'United Kingdom',y2015:567033, y2016:1216441, y2017:1119088},
+  {region:'Germany',      y2015:504014,  y2016:1005009, y2017:1015657},
+];
+
+const CAT_MIX = [
+  {region:'Australia',     bikes:7160366, acc:179543, cloth:76548},
+  {region:'Southwest',     bikes:4553418, acc:189042, cloth:80334},
+  {region:'Northwest',     bikes:2894735, acc:139717, cloth:60622},
+  {region:'United Kingdom',bikes:2766251, acc:100744, cloth:35567},
+  {region:'Germany',       bikes:2415522, acc:82742,  cloth:26416},
+  {region:'France',        bikes:2177571, acc:133256, cloth:51816},
+  {region:'Canada',        bikes:1634534, acc:79482,  cloth:55230},
+];
+
+const RETURN_RATES = [
+  {region:'France',          rate:2.37, color:'#ff6b35'},
+  {region:'Australia',       rate:2.25, color:'#f5c842'},
+  {region:'Canada',          rate:2.18, color:'#4ade80'},
+  {region:'Northwest',       rate:2.16, color:'#f5c842'},
+  {region:'Southwest',       rate:2.11, color:'#00e5b4'},
+  {region:'United Kingdom',  rate:2.10, color:'#00e5b4'},
+  {region:'Germany',         rate:2.05, color:'#00e5b4'},
+];
+
+const MONTHLY = [{"YearMonth":"2015-01","Australia":219531,"Canada":50413,"France":29668,"Germany":8376,"Northwest":93816,"Southwest":112211,"United Kingdom":71298},{"YearMonth":"2015-02","Australia":159884,"Canada":153980,"France":30317,"Germany":44134,"Northwest":44948,"Southwest":51787,"United Kingdom":47178},{"YearMonth":"2015-03","Australia":232585,"Canada":35579,"France":42068,"Germany":61123,"Northwest":75105,"Southwest":160875,"United Kingdom":36100},{"YearMonth":"2015-04","Australia":217498,"Canada":67784,"France":40759,"Germany":50495,"Northwest":82960,"Southwest":158492,"United Kingdom":35376},{"YearMonth":"2015-05","Australia":202110,"Canada":46136,"France":51787,"Germany":44477,"Northwest":89953,"Southwest":203077,"United Kingdom":21787},{"YearMonth":"2015-06","Australia":209659,"Canada":65222,"France":35497,"Germany":55033,"Northwest":115293,"Southwest":153159,"United Kingdom":36125},{"YearMonth":"2015-07","Australia":128247,"Canada":49209,"France":40242,"Germany":38931,"Northwest":83743,"Southwest":104480,"United Kingdom":41263},{"YearMonth":"2015-08","Australia":148985,"Canada":67451,"France":41523,"Germany":33888,"Northwest":87240,"Southwest":95579,"United Kingdom":61087},{"YearMonth":"2015-09","Australia":115496,"Canada":16998,"France":47872,"Germany":37259,"Northwest":35087,"Southwest":42131,"United Kingdom":49220},{"YearMonth":"2015-10","Australia":184024,"Canada":25386,"France":42630,"Germany":30763,"Northwest":26891,"Southwest":45601,"United Kingdom":48982},{"YearMonth":"2015-11","Australia":102265,"Canada":8895,"France":23664,"Germany":49903,"Northwest":46861,"Southwest":50024,"United Kingdom":44998},{"YearMonth":"2015-12","Australia":200380,"Canada":23439,"France":77297,"Germany":49630,"Northwest":52606,"Southwest":86792,"United Kingdom":73619},{"YearMonth":"2016-01","Australia":183099,"Canada":16287,"France":40475,"Germany":37580,"Northwest":41274,"Southwest":51688,"United Kingdom":61325},{"YearMonth":"2016-02","Australia":204620,"Canada":13148,"France":40473,"Germany":63945,"Northwest":37522,"Southwest":51488,"United Kingdom":62966},{"YearMonth":"2016-03","Australia":193122,"Canada":26130,"France":63888,"Germany":50172,"Northwest":37548,"Southwest":40227,"United Kingdom":60876},{"YearMonth":"2016-04","Australia":200952,"Canada":11776,"France":58523,"Germany":70807,"Northwest":61380,"Southwest":42934,"United Kingdom":48585},{"YearMonth":"2016-05","Australia":201647,"Canada":27692,"France":53985,"Germany":54493,"Northwest":51637,"Southwest":84125,"United Kingdom":65765},{"YearMonth":"2016-06","Australia":194978,"Canada":5519,"France":88551,"Germany":63446,"Northwest":47082,"Southwest":82303,"United Kingdom":51946},{"YearMonth":"2016-07","Australia":228385,"Canada":37864,"France":93087,"Germany":98961,"Northwest":86070,"Southwest":149638,"United Kingdom":121352},{"YearMonth":"2016-08","Australia":178456,"Canada":61641,"France":82409,"Germany":87928,"Northwest":93741,"Southwest":185109,"United Kingdom":114880},{"YearMonth":"2016-09","Australia":301211,"Canada":62341,"France":103292,"Germany":101627,"Northwest":85973,"Southwest":178131,"United Kingdom":120168},{"YearMonth":"2016-10","Australia":320099,"Canada":47802,"France":74759,"Germany":111888,"Northwest":114922,"Southwest":212617,"United Kingdom":147079},{"YearMonth":"2016-11","Australia":314570,"Canada":92414,"France":100915,"Germany":95284,"Northwest":144596,"Southwest":230071,"United Kingdom":154076},{"YearMonth":"2016-12","Australia":366548,"Canada":118054,"France":185210,"Germany":168878,"Northwest":249939,"Southwest":339040,"United Kingdom":207425},{"YearMonth":"2017-01","Australia":369940,"Canada":109271,"France":101058,"Germany":146139,"Northwest":172689,"Southwest":224085,"United Kingdom":151196},{"YearMonth":"2017-02","Australia":369650,"Canada":80715,"France":152547,"Germany":131171,"Northwest":159048,"Southwest":283298,"United Kingdom":160372},{"YearMonth":"2017-03","Australia":383032,"Canada":87225,"France":126406,"Germany":163139,"Northwest":177121,"Southwest":309164,"United Kingdom":202510},{"YearMonth":"2017-04","Australia":426388,"Canada":106473,"France":154302,"Germany":173503,"Northwest":195079,"Southwest":300533,"United Kingdom":168078},{"YearMonth":"2017-05","Australia":408012,"Canada":132768,"France":152617,"Germany":203992,"Northwest":254852,"Southwest":417464,"United Kingdom":194128},{"YearMonth":"2017-06","Australia":451084,"Canada":121634,"France":186824,"Germany":197714,"Northwest":250102,"Southwest":376672,"United Kingdom":242805}];
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const fmt  = v => v>=1e6?`$${(v/1e6).toFixed(1)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}K`:`$${v.toFixed(0)}`;
+const fmtN = v => v>=1e3?`${(v/1e3).toFixed(1)}K`:String(v);
+const pct  = (a,b) => ((a-b)/b*100).toFixed(1);
+const tooltipStyle={backgroundColor:'rgba(10,12,16,0.97)',borderColor:'rgba(0,229,180,0.25)',borderWidth:1,titleColor:'#fff',bodyColor:'#9ca3af',titleFont:{family:'Outfit',size:12,weight:'700'},bodyFont:{family:'Source Sans 3',size:11},padding:12,cornerRadius:0,displayColors:true,boxWidth:8,boxHeight:8};
+let charts={};
+let activeRegion = null;
+const totalRev = REGIONS.reduce((s,r)=>s+r.revenue,0);
+
+function stat(label,val,color='var(--accent)'){
+  return `<div><div class="h-label">${label}</div><div class="h-val" style="color:${color}">${val}</div></div>`;
+}
+
+// ─── REGION PILLS ─────────────────────────────────────────────────────────────
+function buildPills() {
+  const wrap = document.getElementById('region-pills');
+  wrap.innerHTML = `<a href="AdventureWorks_index.html" class="rpill" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">⌂ Home</a><button class="rpill active" style="background:var(--accent);color:#000;border-color:var(--accent)" onclick="selectRegion(null,this)">All Regions</button>` +
+    REGIONS.map(r=>`<button class="rpill" style="" onclick="selectRegion('${r.name}',this)" data-color="${r.color}">${FLAGS[r.name]} ${r.name}</button>`).join('');
+}
+
+function selectRegion(name, btn) {
+  activeRegion = name;
+  document.querySelectorAll('.rpill').forEach(b=>{
+    b.classList.remove('active');
+    b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('active');
+  if (name) {
+    btn.style.background=btn.dataset.color;
+    btn.style.color='#000';
+    btn.style.borderColor=btn.dataset.color;
+  } else {
+    btn.style.background='var(--accent)';
+    btn.style.color='#000';
+    btn.style.borderColor='var(--accent)';
+  }
+  document.querySelectorAll('.region-card').forEach(c=>{
+    c.classList.toggle('selected', c.dataset.region===name);
+  });
+  buildTrendChart(name);
+  updateKPIs(name);
+}
+
+// ─── REGION CARDS ─────────────────────────────────────────────────────────────
+function buildRegionCards() {
+  const maxRev = REGIONS[0].revenue;
+  const grid = document.getElementById('region-grid');
+  grid.innerHTML = REGIONS.map((r,i)=>`
+    <div class="region-card" style="--rc:${r.color}" data-region="${r.name}" onclick="selectRegion('${r.name}',document.querySelector('[data-color=\\'${r.color}\\']'))">
+      <div class="rc-rank">#${i+1}</div>
+      <div class="rc-flag">${FLAGS[r.name]}</div>
+      <div class="rc-name">${r.name}</div>
+      <div class="rc-country">${r.country} · ${r.continent}</div>
+      <div class="rc-rev" style="color:${r.color}">${fmt(r.revenue)}</div>
+      <div class="rc-sub">${fmtN(r.orders)} orders · ${fmtN(r.customers)} customers</div>
+      <div class="rc-bar"><div class="rc-bar-fill" data-w="${(r.revenue/maxRev*100).toFixed(1)}" style="background:${r.color}"></div></div>
+    </div>`).join('');
+  setTimeout(()=>{
+    document.querySelectorAll('.rc-bar-fill').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  },400);
+}
+
+// ─── KPI UPDATER ─────────────────────────────────────────────────────────────
+function updateKPIs(name) {
+  if (!name) {
+    document.getElementById('k-rev').textContent = fmt(totalRev);
+    document.getElementById('k-rev-sub').textContent = '10 territories';
+    document.getElementById('k-top').textContent = 'Australia';
+    document.getElementById('k-top-sub').textContent = '$7.4M · 29.8%';
+    document.getElementById('k-cont').textContent = 'N. America';
+    document.getElementById('k-cont-sub').textContent = '$9.7M · 39.0%';
+    document.getElementById('k-regions').textContent = '7';
+    document.getElementById('k-ret').textContent = '2.16%';
+  } else {
+    const r = REGIONS.find(x=>x.name===name);
+    const ret = RETURN_RATES.find(x=>x.region===name);
+    const revShare = (r.revenue/totalRev*100).toFixed(1);
+    document.getElementById('k-rev').textContent = fmt(r.revenue);
+    document.getElementById('k-rev-sub').textContent = `${revShare}% of total`;
+    document.getElementById('k-top').textContent = r.name;
+    document.getElementById('k-top-sub').textContent = `${fmtN(r.orders)} orders`;
+    document.getElementById('k-cont').textContent = r.continent;
+    document.getElementById('k-cont-sub').textContent = r.country;
+    document.getElementById('k-regions').textContent = fmtN(r.customers);
+    document.getElementById('k-ret').textContent = ret ? ret.rate+'%' : '—';
+  }
+}
+
+// ─── TREND CHART ─────────────────────────────────────────────────────────────
+function buildTrendChart(filterRegion) {
+  const labels = MONTHLY.map(m => {
+    const [y,mo] = m.YearMonth.split('-');
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[+mo-1]} ${y.slice(2)}`;
+  });
+
+  const regionKeys = filterRegion ? [filterRegion] : ['Australia','Southwest','Northwest','United Kingdom','Germany','France','Canada'];
+  const colorMap = Object.fromEntries(REGIONS.map(r=>[r.name,r.color]));
+
+  const datasets = regionKeys.map(rk => ({
+    label: rk,
+    data: MONTHLY.map(m=>m[rk]||0),
+    borderColor: colorMap[rk],
+    backgroundColor: 'transparent',
+    borderWidth: filterRegion ? 2.5 : 1.5,
+    tension: 0.4,
+    pointRadius: 0,
+    pointHoverRadius: filterRegion ? 7 : 5,
+    pointHoverBackgroundColor: colorMap[rk],
+    pointHoverBorderColor: '#0a0c10',
+    pointHoverBorderWidth: 2,
+  }));
+
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  if (charts.trend) charts.trend.destroy();
+  charts.trend = new Chart(ctx, {
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:!filterRegion,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:9},boxWidth:12,padding:10,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external:({chart,tooltip})=>{
+            const strip=document.getElementById('trend-strip');
+            if(tooltip.opacity===0||!tooltip.dataPoints?.length){strip.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover chart to inspect a month</div>';return;}
+            const pts = tooltip.dataPoints.filter(p=>p.parsed.y>0).sort((a,b)=>b.parsed.y-a.parsed.y);
+            const totalMonth = pts.reduce((s,p)=>s+p.parsed.y,0);
+            const inner = pts.map(p=>`${stat(p.dataset.label, fmt(p.parsed.y), colorMap[p.dataset.label])}`).join('');
+            strip.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+              ${stat('Period', pts[0]?.label||tooltip.dataPoints[0].label, '#fff')}
+              ${stat('Combined', fmt(totalMonth), 'var(--text)')}
+              ${inner}
+            </div>`;
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:9},maxTicksLimit:10},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── CONTINENT ───────────────────────────────────────────────────────────────
+function buildContinentSplit() {
+  const total = CONTINENTS.reduce((s,c)=>s+c.revenue,0);
+  const split = document.getElementById('cont-split');
+  split.innerHTML = CONTINENTS.map(c=>`<div class="cont-seg" style="width:${(c.revenue/total*100).toFixed(1)}%;background:${c.color}" title="${c.name}: ${fmt(c.revenue)}"></div>`).join('');
+  const legend = document.getElementById('cont-legend');
+  legend.innerHTML = CONTINENTS.map(c=>`
+    <div class="cont-leg">
+      <div class="cont-dot" style="background:${c.color}"></div>
+      <span>${c.name} — ${fmt(c.revenue)} (${(c.revenue/total*100).toFixed(0)}%)</span>
+    </div>`).join('');
+
+  const ctx = document.getElementById('contChart').getContext('2d');
+  if (charts.cont) charts.cont.destroy();
+  charts.cont = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:CONTINENTS.map(c=>c.name),
+      datasets:[{
+        data:CONTINENTS.map(c=>c.revenue),
+        backgroundColor:CONTINENTS.map(c=>c.color+'bb'),
+        hoverBackgroundColor:CONTINENTS.map(c=>c.color),
+        borderColor:'#111318',borderWidth:3,hoverOffset:6,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          ...tooltipStyle,
+          callbacks:{
+            title:ctx=>ctx[0].label,
+            label:ctx=>[` Revenue: ${fmt(ctx.parsed)}`,` Share: ${(ctx.parsed/total*100).toFixed(1)}%`],
+            labelColor:ctx=>({borderColor:CONTINENTS[ctx.dataIndex].color,backgroundColor:CONTINENTS[ctx.dataIndex].color})
+          }
+        }
+      }
+    }
+  });
+}
+
+// ─── YOY CHART ───────────────────────────────────────────────────────────────
+function buildYoYChart() {
+  const colorMap = Object.fromEntries(REGIONS.map(r=>[r.name,r.color]));
+  const ctx = document.getElementById('yoyChart').getContext('2d');
+  if (charts.yoy) charts.yoy.destroy();
+  charts.yoy = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['2015','2016','2017'],
+      datasets: YOY.map(r=>({
+        label:r.region,
+        data:[r.y2015,r.y2016,r.y2017],
+        backgroundColor:colorMap[r.region]+'88',
+        hoverBackgroundColor:colorMap[r.region],
+        borderRadius:1,borderSkipped:false,
+      }))
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:9},boxWidth:8,padding:8,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external:({chart,tooltip})=>{
+            const strip=document.getElementById('yoy-strip');
+            if(tooltip.opacity===0||!tooltip.dataPoints?.length){strip.innerHTML='<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to see growth</div>';return;}
+            const yr = tooltip.dataPoints[0].label;
+            const items = tooltip.dataPoints.sort((a,b)=>b.parsed.y-a.parsed.y);
+            strip.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+              ${stat('Year',yr,'#fff')}
+              ${items.map(p=>{
+                const r=YOY.find(x=>x.region===p.dataset.label);
+                const prev = yr==='2016'?r.y2015:yr==='2017'?r.y2016:null;
+                const g = prev?((p.parsed.y-prev)/prev*100).toFixed(0):null;
+                const arrow = g===null?'':g>0?`<span class="growth-up"> ↑${g}%</span>`:`<span class="growth-dn"> ↓${Math.abs(g)}%</span>`;
+                return `<div><div class="h-label">${p.dataset.label}</div><div class="h-val" style="color:${colorMap[p.dataset.label]}">${fmt(p.parsed.y)}${arrow}</div></div>`;
+              }).join('')}
+            </div>`;
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── CATEGORY MIX TABLE ──────────────────────────────────────────────────────
+function buildCatMixTable() {
+  const tbody = document.getElementById('mix-table');
+  tbody.innerHTML = CAT_MIX.map(r=>{
+    const total = r.bikes+r.acc+r.cloth;
+    const bPct=(r.bikes/total*100).toFixed(0);
+    const aPct=(r.acc/total*100).toFixed(0);
+    const cPct=(r.cloth/total*100).toFixed(0);
+    return `<tr>
+      <td style="color:var(--text)">${FLAGS[r.region]||''} ${r.region}</td>
+      <td><span class="cat-pill pill-bikes">${bPct}%</span></td>
+      <td><span class="cat-pill pill-acc">${aPct}%</span></td>
+      <td><span class="cat-pill pill-cloth">${cPct}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── RETURN LIST ─────────────────────────────────────────────────────────────
+function buildReturnList() {
+  const maxRate = Math.max(...RETURN_RATES.map(r=>r.rate));
+  const list = document.getElementById('ret-list');
+  list.innerHTML = RETURN_RATES.map(r=>`
+    <div class="ret-item">
+      <div class="ret-top">
+        <span class="ret-name">${FLAGS[r.region]||''} ${r.region}</span>
+        <span class="ret-pct" style="color:${r.color}">${r.rate}%</span>
+      </div>
+      <div class="ret-bar-bg">
+        <div class="ret-bar-fill" data-w="${(r.rate/maxRate*100).toFixed(1)}" style="background:${r.color}"></div>
+      </div>
+    </div>`).join('');
+  setTimeout(()=>{
+    document.querySelectorAll('.ret-bar-fill').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  },400);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildPills();
+  buildRegionCards();
+  buildTrendChart(null);
+  buildContinentSplit();
+  buildYoYChart();
+  buildCatMixTable();
+  buildReturnList();
+  updateKPIs(null);
+});
+</script>
+</body>
+</html>

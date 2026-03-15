@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventureWorks Analytics — Gaganjit Singh</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+</style>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c23;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5b4;
+    --accent2: #ff6b35;
+    --accent3: #7c6dfa;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --gold: #f5c842;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  /* ── GRID BG ── */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,180,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,180,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── GLOW ORBS ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  .orb-1 { width: 600px; height: 600px; background: rgba(0,229,180,0.06); top: -200px; right: -100px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(124,109,250,0.05); bottom: 100px; left: -100px; animation-delay: 3s; }
+  .orb-3 { width: 300px; height: 300px; background: rgba(255,107,53,0.04); top: 50%; left: 50%; animation-delay: 5s; }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,12,16,0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #fff;
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+  }
+
+  .nav-links a {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent) !important;
+    color: #000 !important;
+    padding: 7px 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+  }
+  .nav-cta:hover { background: #00ffcc !important; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 0 80px;
+  }
+
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .eyebrow-text {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .hero-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s ease 0.1s both;
+  }
+
+  .hero-title .line-2 {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+  }
+
+  .hero-title .accent { color: var(--accent); -webkit-text-stroke: 0; }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 44px;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  .hero-desc strong { color: var(--text); font-weight: 400; }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s ease 0.3s both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { background: #00ffcc; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* ── HERO STATS ── */
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 64px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s ease 0.4s both;
+  }
+
+  .hero-stat {}
+  .hs-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .hs-val span { color: var(--accent); }
+  .hs-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── SECTION ── */
+  section {
+    padding: 100px 0;
+  }
+
+  .section-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 56px;
+  }
+
+  /* ── DASHBOARD CARDS ── */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: block;
+    transition: all 0.3s;
+    group: true;
+  }
+
+  .dash-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--card-color, var(--accent)), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .dash-card:hover {
+    border-color: var(--card-color, var(--accent));
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+
+  .dash-card:hover::before { opacity: 0.04; }
+
+  .dash-card-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dash-card-arrow {
+    font-size: 16px;
+    color: var(--muted);
+    transition: all 0.3s;
+    transform: translateX(0);
+  }
+
+  .dash-card:hover .dash-card-arrow {
+    color: var(--card-color, var(--accent));
+    transform: translateX(4px);
+  }
+
+  .dash-card-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .dash-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .dash-card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .dash-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .dash-card:hover .tag {
+    border-color: var(--card-color, var(--accent));
+    color: var(--card-color, var(--accent));
+  }
+
+  .dash-card-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-color, var(--accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .dash-card:hover .dash-card-bar { transform: scaleX(1); }
+
+  /* Featured card (spans 2) */
+  .dash-card.featured {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+    padding: 36px;
+  }
+
+  .dash-card.featured .dash-card-title { font-size: 22px; }
+  .dash-card.featured .dash-card-desc { font-size: 12px; }
+
+  .featured-visual {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mini-chart {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 80px;
+    padding: 0 16px;
+  }
+
+  .mini-bar {
+    width: 14px;
+    border-radius: 1px 1px 0 0;
+    animation: barGrow 1s ease both;
+  }
+
+  @keyframes barGrow {
+    from { height: 0 !important; }
+    to { }
+  }
+
+  /* ── TECH STACK ── */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .tech-item {
+    background: var(--surface);
+    padding: 24px;
+    transition: background 0.2s;
+  }
+  .tech-item:hover { background: var(--surface2); }
+
+  .tech-icon { font-size: 24px; margin-bottom: 10px; }
+  .tech-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .tech-desc { font-size: 10px; color: var(--muted); line-height: 1.5; }
+
+  /* ── METRICS BAND ── */
+  .metrics-band {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 40px 48px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metrics-band::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .metric-item {
+    padding: 0 32px;
+    border-right: 1px solid var(--border);
+  }
+  .metric-item:first-child { padding-left: 0; }
+  .metric-item:last-child { border-right: none; }
+
+  .metric-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .metric-sub { font-size: 11px; color: rgba(107,114,128,0.6); }
+
+  /* ── ABOUT / AUTHOR ── */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .about-left {}
+
+  .author-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+  }
+
+  .author-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+
+  .author-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #000;
+    margin-bottom: 16px;
+  }
+
+  .author-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .author-title {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  .author-bio {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .author-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .author-link {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .author-link:hover { color: var(--accent); border-color: var(--accent); }
+  .author-link.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+  .author-link.primary:hover { background: #00ffcc; }
+
+  /* ── SKILLS LIST ── */
+  .skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .skill-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .skill-name {
+    font-size: 11px;
+    color: var(--text);
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .skill-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .skill-fill {
+    height: 100%;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0;
+  }
+
+  .skill-pct {
+    font-size: 10px;
+    color: var(--muted);
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .footer-left strong { color: var(--text); font-weight: 400; }
+
+  .footer-right {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .footer-tag {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .wrapper { padding: 0 20px; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .dash-card.featured { grid-column: span 1; grid-template-columns: 1fr; }
+    .featured-visual { display: none; }
+    .metrics-band { grid-template-columns: repeat(2,1fr); padding: 28px; }
+    .metric-item { padding: 12px 16px; border-right: none; border-bottom: 1px solid var(--border); }
+    .about-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Adventure<span>Works</span> Analytics</div>
+  <div class="nav-links">
+    <a href="#dashboards">Dashboards</a>
+    <a href="#stack">Tech Stack</a>
+    <a href="#about">About</a>
+    <a href="https://github.com/gaganjits/AdventureWorks-Analytics" target="_blank" class="nav-cta">GitHub ↗</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="wrapper">
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-dot"></div>
+      <span class="eyebrow-text">End-to-End Data Analytics Project</span>
+    </div>
+    <h1 class="hero-title">
+      AdventureWorks<br>
+      <span class="line-2">Analytics</span><br>
+      <span class="accent">Platform</span>
+    </h1>
+    <p class="hero-desc">
+      A <strong>full-stack business intelligence system</strong> built on 56,046 sales records across 3 years, 10 territories, and 293 products. Five interactive dashboards covering revenue, products, customers, regions, and seasonality — all built from raw CSV data.
+    </p>
+    <div class="hero-actions">
+      <a href="#dashboards" class="btn-primary">View Dashboards ↓</a>
+      <a href="https://github.com/gaganjits/AdventureWorks-Analytics" target="_blank" class="btn-secondary">GitHub Repo ↗</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hs-val">$<span>24.9</span>M</div>
+        <div class="hs-label">Total Revenue Analyzed</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val"><span>56</span>K+</div>
+        <div class="hs-label">Sales Records</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val"><span>17</span>K+</div>
+        <div class="hs-label">Unique Customers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val"><span>5</span></div>
+        <div class="hs-label">Interactive Dashboards</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val"><span>10</span></div>
+        <div class="hs-label">Global Territories</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- METRICS BAND -->
+<div class="wrapper">
+  <div class="metrics-band reveal">
+    <div class="metric-item">
+      <div class="metric-label">Profit Margin</div>
+      <div class="metric-val">42%</div>
+      <div class="metric-sub">Consistent across all regions</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-label">Top Region</div>
+      <div class="metric-val">🇦🇺</div>
+      <div class="metric-sub">Australia · $7.4M · 29.8% share</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-label">YoY Growth</div>
+      <div class="metric-val">+46%</div>
+      <div class="metric-sub">2015 → 2016 revenue jump</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-label">Return Rate</div>
+      <div class="metric-val">2.5%</div>
+      <div class="metric-sub">Avg across all subcategories</div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARDS -->
+<div class="wrapper" id="dashboards">
+  <section>
+    <div class="section-eyebrow">Five Dashboards</div>
+    <h2 class="section-title reveal">Every angle of the business<br>fully visualized</h2>
+    <p class="section-sub reveal">Click any dashboard to open it. All charts are interactive — hover for detail, click to filter, explore the data yourself.</p>
+
+    <div class="dashboard-grid">
+
+      <!-- FEATURED: Revenue & Growth -->
+      <a href="AdventureWorks_Revenue_Growth_Dashboard.html" class="dash-card featured reveal" style="--card-color:#00e5b4">
+        <div>
+          <div class="dash-card-num">01 <span class="dash-card-arrow">→</span></div>
+          <span class="dash-card-icon">📈</span>
+          <div class="dash-card-title">Revenue &amp; Growth</div>
+          <div class="dash-card-desc">Monthly revenue trends, YoY comparisons, profit margins, regional breakdowns, and KPI cards — all with live hover details and year filters.</div>
+          <div class="dash-card-tags">
+            <span class="tag">Time Series</span>
+            <span class="tag">YoY Comparison</span>
+            <span class="tag">KPI Cards</span>
+            <span class="tag">Crosshair</span>
+          </div>
+        </div>
+        <div class="featured-visual">
+          <div class="mini-chart">
+            <div class="mini-bar" style="height:30%;background:rgba(0,229,180,0.3);animation-delay:0.1s"></div>
+            <div class="mini-bar" style="height:38%;background:rgba(0,229,180,0.35);animation-delay:0.15s"></div>
+            <div class="mini-bar" style="height:45%;background:rgba(0,229,180,0.4);animation-delay:0.2s"></div>
+            <div class="mini-bar" style="height:42%;background:rgba(0,229,180,0.4);animation-delay:0.25s"></div>
+            <div class="mini-bar" style="height:55%;background:rgba(0,229,180,0.5);animation-delay:0.3s"></div>
+            <div class="mini-bar" style="height:60%;background:rgba(0,229,180,0.55);animation-delay:0.35s"></div>
+            <div class="mini-bar" style="height:72%;background:rgba(0,229,180,0.65);animation-delay:0.4s"></div>
+            <div class="mini-bar" style="height:68%;background:rgba(0,229,180,0.6);animation-delay:0.45s"></div>
+            <div class="mini-bar" style="height:80%;background:rgba(0,229,180,0.75);animation-delay:0.5s"></div>
+            <div class="mini-bar" style="height:88%;background:rgba(0,229,180,0.85);animation-delay:0.55s"></div>
+            <div class="mini-bar" style="height:95%;background:rgba(0,229,180,0.95);animation-delay:0.6s"></div>
+            <div class="mini-bar" style="height:100%;background:#00e5b4;animation-delay:0.65s"></div>
+          </div>
+        </div>
+        <div class="dash-card-bar"></div>
+      </a>
+
+      <!-- Product & Category -->
+      <a href="AdventureWorks_Product_Category_Insights.html" class="dash-card reveal" style="--card-color:#7c6dfa">
+        <div class="dash-card-num">02 <span class="dash-card-arrow">→</span></div>
+        <span class="dash-card-icon">📦</span>
+        <div class="dash-card-title">Product &amp; Category Insights</div>
+        <div class="dash-card-desc">Drill-down revenue tree, top 15 products, price vs margin scatter, return rates, and subcategory breakdown with live category filters.</div>
+        <div class="dash-card-tags">
+          <span class="tag">Drill-Down</span>
+          <span class="tag">Scatter Plot</span>
+          <span class="tag">Ranked Table</span>
+        </div>
+        <div class="dash-card-bar"></div>
+      </a>
+
+      <!-- Customer Analytics -->
+      <a href="AdventureWorks_Customer_Analytics.html" class="dash-card reveal" style="--card-color:#f5c842">
+        <div class="dash-card-num">03 <span class="dash-card-arrow">→</span></div>
+        <span class="dash-card-icon">👥</span>
+        <div class="dash-card-title">Customer Analytics</div>
+        <div class="dash-card-desc">Segmentation by income, occupation, education, gender. New vs returning cohorts, purchase frequency, top 10 LTV customers.</div>
+        <div class="dash-card-tags">
+          <span class="tag">Segmentation</span>
+          <span class="tag">Cohort</span>
+          <span class="tag">LTV</span>
+        </div>
+        <div class="dash-card-bar"></div>
+      </a>
+
+      <!-- Regional -->
+      <a href="AdventureWorks_Regional_Performance.html" class="dash-card reveal" style="--card-color:#ff6b35">
+        <div class="dash-card-num">04 <span class="dash-card-arrow">→</span></div>
+        <span class="dash-card-icon">🌏</span>
+        <div class="dash-card-title">Regional Performance</div>
+        <div class="dash-card-desc">7 territories, 3 continents. Click-to-filter region cards, monthly trend lines per territory, YoY growth, category mix, return rates.</div>
+        <div class="dash-card-tags">
+          <span class="tag">Geographic</span>
+          <span class="tag">Multi-Line</span>
+          <span class="tag">Continent</span>
+        </div>
+        <div class="dash-card-bar"></div>
+      </a>
+
+      <!-- Seasonality -->
+      <a href="AdventureWorks_Seasonality_Channels.html" class="dash-card reveal" style="--card-color:#38bdf8">
+        <div class="dash-card-num">05 <span class="dash-card-arrow">→</span></div>
+        <span class="dash-card-icon">📅</span>
+        <div class="dash-card-title">Seasonality &amp; Channels</div>
+        <div class="dash-card-desc">Revenue heatmap, quarterly trends, day-of-week patterns, peak month rankings, 3-month rolling average, and returns seasonality.</div>
+        <div class="dash-card-tags">
+          <span class="tag">Heatmap</span>
+          <span class="tag">Rolling Avg</span>
+          <span class="tag">DOW</span>
+        </div>
+        <div class="dash-card-bar"></div>
+      </a>
+
+    </div>
+  </section>
+</div>
+
+<!-- TECH STACK -->
+<div class="wrapper" id="stack">
+  <section>
+    <div class="section-eyebrow">Built With</div>
+    <h2 class="section-title reveal">The tech stack</h2>
+    <p class="section-sub reveal">Every chart, KPI, and interaction was built from raw CSV data — no BI tools, no drag-and-drop. Pure Python analytics + hand-coded dashboards.</p>
+
+    <div class="tech-grid reveal">
+      <div class="tech-item">
+        <div class="tech-icon">🐍</div>
+        <div class="tech-name">Python / Pandas</div>
+        <div class="tech-desc">Data loading, cleaning, merging 9 tables, computing KPIs, aggregations, and exporting analysis-ready JSON.</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-icon">📊</div>
+        <div class="tech-name">Chart.js 4.4</div>
+        <div class="tech-desc">All charts — line, bar, stacked, scatter/bubble, doughnut. Custom external tooltips, crosshair plugin, interaction modes.</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-icon">🎨</div>
+        <div class="tech-name">HTML / CSS / JS</div>
+        <div class="tech-desc">Zero frameworks. Custom dark theme, CSS animations, staggered reveals, hover strips, and drill-down interactions.</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-icon">🗂️</div>
+        <div class="tech-name">AdventureWorks</div>
+        <div class="tech-desc">Microsoft's sample dataset — 9 CSVs covering sales, products, customers, territories, and returns across 2015–2017.</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-icon">⚡</div>
+        <div class="tech-name">Google Fonts</div>
+        <div class="tech-desc">Outfit (display/headers) + Source Sans 3 (data/body). Chosen for warmth and readability across all screen sizes.</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-icon">🔗</div>
+        <div class="tech-name">GitHub</div>
+        <div class="tech-desc">Full source code, raw data, notebooks, and dashboard files available at github.com/gaganjits/AdventureWorks-Analytics.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ABOUT -->
+<div class="wrapper" id="about">
+  <section>
+    <div class="section-eyebrow">About the Author</div>
+    <h2 class="section-title reveal">Built by Gaganjit Singh</h2>
+
+    <div class="about-grid">
+      <div class="about-left reveal">
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:24px">
+          CS student at Thompson Rivers University, graduating May 2026. This project was built to demonstrate end-to-end data analytics — from raw data to production-ready dashboards — using only Python and vanilla web technologies.
+        </p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:32px">
+          Key skills demonstrated: data wrangling with Pandas, multi-table joins, KPI computation, interactive visualization design, and translating raw numbers into business narratives.
+        </p>
+
+        <div style="margin-bottom:32px">
+          <div style="font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Core Skills</div>
+          <div class="skills-list" id="skills-list"></div>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="author-card">
+          <div class="author-avatar">GS</div>
+          <div class="author-name">Gaganjit Singh</div>
+          <div class="author-title">Data Analyst · CS '26 @ TRU · Python · SQL · Power BI · DAX</div>
+          <div class="author-bio">
+            Hands-on analytics experience across healthcare, construction, and sales. Real stakeholders, real datasets, real deadlines. Currently pursuing PL-300 certification. Top 10% globally at NASA Space Apps Challenge 2024. Dean's List Fall 2025.
+          </div>
+          <div class="author-links">
+            <a href="https://linkedin.com/in/gaganjitsingh99" target="_blank" class="author-link primary">LinkedIn ↗</a>
+            <a href="https://github.com/gaganjits" target="_blank" class="author-link">GitHub ↗</a>
+            <a href="/cdn-cgi/l/email-protection#6700060006090d0e1349145e5e27000a060e0b4904080a" class="author-link">Email ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<div class="wrapper">
+  <footer>
+    <div class="footer-left">
+      AdventureWorks Analytics · Built by <strong>Gaganjit Singh</strong> · 2025
+    </div>
+    <div class="footer-right">
+      <span class="footer-tag">Python</span>
+      <span class="footer-tag">Chart.js</span>
+      <span class="footer-tag">56K Records</span>
+      <span class="footer-tag">5 Dashboards</span>
+    </div>
+  </footer>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ── SCROLL REVEAL — works on file:// and https:// ──
+  const revealEls = document.querySelectorAll('.reveal');
+
+  // Mark all visible immediately on load (fixes file:// blank sections)
+  function checkReveal() {
+    revealEls.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight + 100) {
+        el.classList.add('visible');
+      }
+    });
+  }
+
+  // Also use IntersectionObserver as progressive enhancement
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 60);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px 100px 0px' });
+    revealEls.forEach(el => observer.observe(el));
+  }
+
+  // Run immediately and on scroll
+  checkReveal();
+  window.addEventListener('scroll', checkReveal, { passive: true });
+  // Extra safety — run again after fonts/images load
+  window.addEventListener('load', checkReveal);
+
+  // ── SKILL BARS ──
+  const SKILLS = [
+    {name:'Python',   pct:90, color:'#00e5b4'},
+    {name:'SQL',      pct:85, color:'#7c6dfa'},
+    {name:'Power BI', pct:88, color:'#f5c842'},
+    {name:'DAX',      pct:82, color:'#ff6b35'},
+    {name:'Pandas',   pct:87, color:'#38bdf8'},
+    {name:'Chart.js', pct:80, color:'#e879f9'},
+  ];
+
+  const skillsList = document.getElementById('skills-list');
+  skillsList.innerHTML = SKILLS.map(s => `
+    <div class="skill-item">
+      <span class="skill-name">${s.name}</span>
+      <div class="skill-bar">
+        <div class="skill-fill" data-w="${s.pct}" style="background:${s.color}"></div>
+      </div>
+      <span class="skill-pct">${s.pct}%</span>
+    </div>`).join('');
+
+  // Animate skill bars — fire immediately if already in view
+  function animateSkills() {
+    const rect = skillsList.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      skillsList.querySelectorAll('.skill-fill').forEach((el, i) => {
+        setTimeout(() => { el.style.width = el.dataset.w + '%'; }, i * 80);
+      });
+      window.removeEventListener('scroll', animateSkills);
+    }
+  }
+  animateSkills();
+  window.addEventListener('scroll', animateSkills, { passive: true });
+  window.addEventListener('load', animateSkills);
+
+  // ── SMOOTH SCROLL ──
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySe

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventureWorks — Seasonality & Channels</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+</style>
+<style>
+  :root {
+    --bg:#0a0c10; --surface:#111318; --surface2:#181c23;
+    --border:rgba(255,255,255,0.07);
+    --accent:#00e5b4; --accent2:#ff6b35; --accent3:#7c6dfa;
+    --text:#e8eaf0; --muted:#6b7280; --gold:#f5c842;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,229,180,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,180,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrapper{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:32px 24px;}
+
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;gap:20px;flex-wrap:wrap;}
+  .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  h1{font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,36px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;color:#fff;}
+  h1 span{color:var(--accent);}
+
+  .year-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .ytab{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Source Sans 3',sans-serif;font-size:11px;padding:6px 14px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;}
+  .ytab:hover{color:var(--text);border-color:rgba(255,255,255,0.2);}
+  .ytab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
+  /* KPI */
+  .kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px;}
+  .kpi-card{background:var(--surface);padding:18px 20px 14px;position:relative;overflow:hidden;transition:background 0.2s;}
+  .kpi-card:hover{background:var(--surface2);}
+  .kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+  .kpi-card:hover::after{transform:scaleX(1);}
+  .kpi-label{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .kpi-value{font-family:'Outfit',sans-serif;font-size:clamp(16px,2.2vw,24px);font-weight:700;color:#fff;line-height:1;margin-bottom:5px;}
+  .kpi-sub{font-size:10px;color:var(--muted);}
+
+  /* GRIDS */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-32{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-23{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);padding:22px;animation:fadeUp 0.6s ease both;}
+  .card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:10px;}
+  .card-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#fff;}
+  .card-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+  .card-badge{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+  .hover-strip{display:flex;gap:20px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);min-height:28px;flex-wrap:wrap;align-items:center;}
+  .h-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+  .h-val{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;}
+
+  /* HEATMAP */
+  .heatmap-wrap{overflow-x:auto;}
+  .heatmap{display:grid;grid-template-columns:60px repeat(12,1fr);gap:3px;min-width:520px;}
+  .hm-cell{height:38px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.2s;cursor:default;position:relative;}
+  .hm-cell:hover{z-index:2;transform:scale(1.08);}
+  .hm-cell:hover .hm-tooltip{opacity:1;}
+  .hm-header{font-size:9px;color:var(--muted);letter-spacing:0.06em;}
+  .hm-year{font-size:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:700;justify-content:flex-start;padding-right:6px;}
+  .hm-val{border-radius:1px;}
+  .hm-tooltip{position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);background:rgba(10,12,16,0.97);border:1px solid rgba(0,229,180,0.2);padding:6px 10px;font-size:10px;color:#fff;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:10;text-align:center;}
+  .hm-legend{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:var(--muted);}
+  .hm-legend-bar{height:8px;width:120px;background:linear-gradient(90deg,rgba(0,229,180,0.1),rgba(0,229,180,1));border-radius:1px;}
+
+  /* DOW BARS */
+  .dow-bars{display:flex;gap:8px;align-items:flex-end;height:100px;}
+  .dow-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .dow-bar{width:100%;border-radius:1px 1px 0 0;transition:all 0.8s cubic-bezier(0.4,0,0.2,1);cursor:default;height:0;}
+  .dow-bar:hover{filter:brightness(1.3);}
+  .dow-label{font-size:9px;color:var(--muted);}
+
+  /* QUARTER CARDS */
+  .quarter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .q-card{background:var(--surface2);border:1px solid var(--border);padding:14px;text-align:center;transition:all 0.2s;cursor:default;}
+  .q-card:hover{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);}
+  .q-label{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .q-val{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px;}
+  .q-sub{font-size:10px;color:var(--muted);}
+  .q-badge{display:inline-block;font-size:9px;padding:2px 6px;margin-top:4px;}
+  .q-high{background:rgba(0,229,180,0.12);color:var(--accent);}
+  .q-low{background:rgba(255,107,53,0.12);color:var(--accent2);}
+  .q-mid{background:rgba(124,109,250,0.1);color:var(--accent3);}
+
+  /* PEAK MONTH LIST */
+  .peak-list{display:flex;flex-direction:column;gap:6px;}
+  .peak-item{display:flex;align-items:center;gap:10px;padding:8px 10px;transition:background 0.15s;cursor:default;}
+  .peak-item:hover{background:rgba(255,255,255,0.03);}
+  .peak-rank{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--muted);width:18px;flex-shrink:0;}
+  .peak-rank.gold{color:var(--gold);}
+  .peak-rank.silver{color:#9ca3af;}
+  .peak-rank.bronze{color:#cd7f32;}
+  .peak-month-label{font-size:11px;color:var(--text);flex:1;}
+  .peak-rev{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--accent);}
+  .peak-bar{height:2px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:2px;}
+  .peak-bar-fill{height:100%;background:var(--accent);transition:width 0.8s ease;width:0;}
+
+  /* ROLLING CHART */
+  .momentum-wrap{position:relative;height:160px;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .card:nth-child(1){animation-delay:0.1s}.card:nth-child(2){animation-delay:0.15s}
+  .card:nth-child(3){animation-delay:0.2s}.card:nth-child(4){animation-delay:0.25s}
+  .card:nth-child(5){animation-delay:0.3s}.card:nth-child(6){animation-delay:0.35s}
+  .card:nth-child(7){animation-delay:0.4s}
+
+  .footer-note{margin-top:24px;text-align:center;font-size:10px;color:rgba(107,114,128,0.4);letter-spacing:0.08em;}
+  @media(max-width:900px){.grid-2,.grid-3,.grid-32,.grid-23{grid-template-columns:1fr;}.quarter-grid{grid-template-columns:repeat(2,1fr);}}
+
+  /* ── TOP MINI NAV ── */
+  .top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10,12,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    overflow-x: auto;
+  }
+  .top-nav::-webkit-scrollbar { display: none; }
+  .top-nav-home {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0 16px 0 0;
+    margin-right: 12px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .top-nav-home:hover { color: #00ffcc; }
+  .top-nav-link {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0 12px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+  .top-nav-link:hover { color: var(--text); }
+  .top-nav-link.current { color: var(--accent); border-bottom-color: var(--accent); }
+  .wrapper, .hero, section { padding-top: calc(var(--top, 0px) + 44px) !important; }
+
+</style>
+</head>
+<body>
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a href="AdventureWorks_index.html" class="top-nav-home">⌂ AdventureWorks</a>
+    <a href="AdventureWorks_Revenue_Growth_Dashboard.html" class="top-nav-link ">Revenue & Growth</a><a href="AdventureWorks_Product_Category_Insights.html" class="top-nav-link ">Product & Category</a><a href="AdventureWorks_Customer_Analytics.html" class="top-nav-link ">Customer Analytics</a><a href="AdventureWorks_Regional_Performance.html" class="top-nav-link ">Regional Performance</a><a href="AdventureWorks_Seasonality_Channels.html" class="top-nav-link current">Seasonality</a>
+  </nav>
+<div class="wrapper">
+
+  <header>
+    <div>
+      <div class="eyebrow">AdventureWorks Analytics · Seasonality &amp; Channels</div>
+      <h1>Sales Patterns<br><span>&amp; Timing</span></h1>
+    </div>
+    <div class="year-tabs">
+      <a href="AdventureWorks_index.html" class="ytab" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">⌂ Home</a>
+      <button class="ytab active" onclick="setYear('all',this)">All Years</button>
+      <button class="ytab" onclick="setYear(2015,this)">2015</button>
+      <button class="ytab" onclick="setYear(2016,this)">2016</button>
+      <button class="ytab" onclick="setYear(2017,this)">2017</button>
+    </div>
+  </header>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Peak Month</div>
+      <div class="kpi-value" style="font-size:15px" id="k-peak">Jun 2017</div>
+      <div class="kpi-sub">$1.83M revenue</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent3)">
+      <div class="kpi-label">Peak Quarter</div>
+      <div class="kpi-value" style="font-size:15px" id="k-pq">Q2 2017</div>
+      <div class="kpi-sub" id="k-pq-sub">$5.1M revenue</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">H1 vs H2</div>
+      <div class="kpi-value" id="k-h1h2">52/48</div>
+      <div class="kpi-sub">H1 slightly stronger</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Best Day</div>
+      <div class="kpi-value" style="font-size:15px">Monday</div>
+      <div class="kpi-sub">Highest avg revenue</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent2)">
+      <div class="kpi-label">Jul Drop</div>
+      <div class="kpi-value">−57%</div>
+      <div class="kpi-sub">vs Jun (2015 only)</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">Q2→Q1 Momentum</div>
+      <div class="kpi-value">+26%</div>
+      <div class="kpi-sub">2017 Q2 vs Q1</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Monthly pattern + Heatmap -->
+  <div class="grid-32">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Revenue Pattern</div>
+          <div class="card-sub">Combined across years · category breakdown · hover for detail</div>
+        </div>
+        <div class="card-badge">Seasonality</div>
+      </div>
+      <div style="position:relative;height:220px">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+      <div class="hover-strip" id="monthly-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bars for category breakdown</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue Heatmap</div>
+          <div class="card-sub">Month × Year intensity · hover cells</div>
+        </div>
+        <div class="card-badge">Heatmap</div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+      <div class="hm-legend">
+        <span>Low</span>
+        <div class="hm-legend-bar"></div>
+        <span>High</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Quarterly + Day of week + Returns -->
+  <div class="grid-3">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Quarterly Performance</div>
+          <div class="card-sub">Revenue by Q across all years</div>
+        </div>
+        <div class="card-badge">Quarterly</div>
+      </div>
+      <div style="position:relative;height:180px">
+        <canvas id="quarterChart"></canvas>
+      </div>
+      <div class="hover-strip" id="q-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover for detail</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Day of Week Pattern</div>
+          <div class="card-sub">Revenue distribution Mon–Sun</div>
+        </div>
+        <div class="card-badge">DOW</div>
+      </div>
+      <div style="position:relative;height:180px">
+        <canvas id="dowChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top 10 Peak Months</div>
+          <div class="card-sub">Highest revenue months on record</div>
+        </div>
+        <div class="card-badge">Peaks</div>
+      </div>
+      <div class="peak-list" id="peak-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: YoY monthly + Returns seasonality + Rolling momentum -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Year-over-Year Monthly Pattern</div>
+          <div class="card-sub">Same-month comparison 2015 / 2016 / 2017 · hover for detail</div>
+        </div>
+        <div class="card-badge">YoY</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="yoyMonthChart"></canvas>
+      </div>
+      <div class="hover-strip" id="yoy-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to compare years</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Returns Seasonality</div>
+          <div class="card-sub">Units returned by month · hover for context</div>
+        </div>
+        <div class="card-badge">Returns</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="retSeasonChart"></canvas>
+      </div>
+      <div class="hover-strip" id="ret-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to explore</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 4: Rolling 3m + Category seasonality -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">3-Month Rolling Revenue</div>
+          <div class="card-sub">Smoothed trend removing monthly noise · hover for detail</div>
+        </div>
+        <div class="card-badge">Momentum</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="rollingChart"></canvas>
+      </div>
+      <div class="hover-strip" id="rolling-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to inspect momentum</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Category Seasonality</div>
+          <div class="card-sub">Monthly revenue by product category</div>
+        </div>
+        <div class="card-badge">Category</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="catSeasonChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">AdventureWorks Analytics · Seasonality &amp; Channels · 2015–2017 · Built by Gaganjit Singh</div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const MONTHLY_TOTAL = [2292117,2345630,2563994,2676135,2973293,3030801,1301471,1340646,1296806,1434098,1460524,2199070];
+const MONTHLY_BIKES = [2180876,2238875,2446505,2554588,2842123,2902409,1275102,1242530,1196461,1330496,1357634,2074895];
+const MONTHLY_ACC   = [78356,75542,83670,85696,95466,88601,19039,71439,71027,74132,74221,89484];
+const MONTHLY_CLOTH = [32885,31214,33819,35851,35704,39791,7330,26677,29318,29470,28669,34691];
+
+const HEATMAP_DATA = {
+  2015:[585313,532226,643436,653364,659326,669989,486115,536453,344063,404277,326611,563762],
+  2016:[432426,474163,471962,494957,545535,533825,815356,804193,952743,1029821,1133913,1635309],
+  2017:[1274379,1339241,1448596,1527814,1768433,1826987,null,null,null,null,null,null],
+};
+
+const QUARTERLY = [
+  {year:2015,q:1,rev:1760975,orders:547},{year:2015,q:2,rev:1982679,orders:622},
+  {year:2015,q:3,rev:1366631,orders:721},{year:2015,q:4,rev:1294649,orders:740},
+  {year:2016,q:1,rev:1378550,orders:775},{year:2016,q:2,rev:1574317,orders:931},
+  {year:2016,q:3,rev:2572293,orders:3617},{year:2016,q:4,rev:3799043,orders:5372},
+  {year:2017,q:1,rev:4062216,orders:5531},{year:2017,q:2,rev:5123233,orders:6308},
+];
+
+const DOW = [
+  {day:'Mon',revenue:3625047,orders:3702},
+  {day:'Tue',revenue:3581062,orders:3617},
+  {day:'Wed',revenue:3660068,orders:3688},
+  {day:'Thu',revenue:3484857,orders:3481},
+  {day:'Fri',revenue:3574587,orders:3637},
+  {day:'Sat',revenue:3519250,orders:3552},
+  {day:'Sun',revenue:3469716,orders:3487},
+];
+
+const PEAK_MONTHS = [
+  {year:2017,month:'Jun',revenue:1826987},{year:2017,month:'May',revenue:1768433},
+  {year:2016,month:'Dec',revenue:1635309},{year:2017,month:'Apr',revenue:1527814},
+  {year:2017,month:'Mar',revenue:1448596},{year:2017,month:'Feb',revenue:1339241},
+  {year:2017,month:'Jan',revenue:1274379},{year:2016,month:'Nov',revenue:1133913},
+  {year:2016,month:'Oct',revenue:1029821},{year:2016,month:'Sep',revenue:952743},
+];
+
+const YOY_MONTHLY = {
+  2015:[585313,532226,643436,653364,659326,669989,486115,536453,344063,404277,326611,563762],
+  2016:[432426,474163,471962,494957,545535,533825,815356,804193,952743,1029821,1133913,1635309],
+  2017:[1274379,1339241,1448596,1527814,1768433,1826987,null,null,null,null,null,null],
+};
+
+const RET_SEASON = [170,166,177,183,190,179,48,126,124,148,141,176];
+
+const ROLLING = [
+  {ym:'Jan 15',rev:585313,roll:null},{ym:'Feb 15',rev:532226,roll:null},
+  {ym:'Mar 15',rev:643436,roll:587058},{ym:'Apr 15',rev:653364,roll:609675},
+  {ym:'May 15',rev:659326,roll:652042},{ym:'Jun 15',rev:669989,roll:660893},
+  {ym:'Jul 15',rev:486115,roll:605143},{ym:'Aug 15',rev:536453,roll:564186},
+  {ym:'Sep 15',rev:344063,roll:455544},{ym:'Oct 15',rev:404277,roll:428264},
+  {ym:'Nov 15',rev:326611,roll:358317},{ym:'Dec 15',rev:563762,roll:431550},
+  {ym:'Jan 16',rev:432426,roll:440933},{ym:'Feb 16',rev:474163,roll:490117},
+  {ym:'Mar 16',rev:471962,roll:459517},{ym:'Apr 16',rev:494957,roll:480361},
+  {ym:'May 16',rev:545535,roll:504151},{ym:'Jun 16',rev:533825,roll:524772},
+  {ym:'Jul 16',rev:815356,roll:631572},{ym:'Aug 16',rev:804193,roll:717791},
+  {ym:'Sep 16',rev:952743,roll:857431},{ym:'Oct 16',rev:1029821,roll:928919},
+  {ym:'Nov 16',rev:1133913,roll:1038826},{ym:'Dec 16',rev:1635309,roll:1266348},
+  {ym:'Jan 17',rev:1274379,roll:1347867},{ym:'Feb 17',rev:1339241,roll:1416310},
+  {ym:'Mar 17',rev:1448596,roll:1354072},{ym:'Apr 17',rev:1527814,roll:1438550},
+  {ym:'May 17',rev:1768433,roll:1581614},{ym:'Jun 17',rev:1826987,roll:1707745},
+];
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const fmt  = v => v>=1e6?`$${(v/1e6).toFixed(2)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}K`:`$${Math.round(v).toLocaleString()}`;
+const fmtN = v => v>=1e3?`${(v/1e3).toFixed(1)}K`:String(v);
+const COLORS = ['#00e5b4','#7c6dfa','#f5c842','#ff6b35','#38bdf8'];
+const tooltipStyle={backgroundColor:'rgba(10,12,16,0.97)',borderColor:'rgba(0,229,180,0.25)',borderWidth:1,titleColor:'#fff',bodyColor:'#9ca3af',titleFont:{family:'Outfit',size:12,weight:'700'},bodyFont:{family:'Source Sans 3',size:11},padding:12,cornerRadius:0,displayColors:true,boxWidth:8,boxHeight:8};
+let charts={};
+
+function stat(label,val,color='var(--accent)'){
+  return `<div><div class="h-label">${label}</div><div class="h-val" style="color:${color}">${val}</div></div>`;
+}
+
+function extTooltip(stripId, fn) {
+  return ({tooltip}) => {
+    const s = document.getElementById(stripId);
+    if(!s) return;
+    if(tooltip.opacity===0||!tooltip.dataPoints?.length){
+      s.innerHTML=`<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to explore</div>`;return;
+    }
+    s.innerHTML = fn(tooltip);
+  };
+}
+
+// ─── MONTHLY STACKED ─────────────────────────────────────────────────────────
+function buildMonthlyChart() {
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  if(charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'Bikes',      data:MONTHLY_BIKES, backgroundColor:'rgba(0,229,180,0.75)',  hoverBackgroundColor:'#00e5b4', borderRadius:0,borderSkipped:false},
+        {label:'Accessories',data:MONTHLY_ACC,   backgroundColor:'rgba(124,109,250,0.75)',hoverBackgroundColor:'#7c6dfa', borderRadius:0,borderSkipped:false},
+        {label:'Clothing',   data:MONTHLY_CLOTH, backgroundColor:'rgba(245,200,66,0.75)', hoverBackgroundColor:'#f5c842', borderRadius:2,borderSkipped:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:12,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external: extTooltip('monthly-strip', t => {
+            const i = t.dataPoints[0].dataIndex;
+            const bikes=MONTHLY_BIKES[i], acc=MONTHLY_ACC[i], cloth=MONTHLY_CLOTH[i];
+            const total=bikes+acc+cloth;
+            return `<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+              ${stat('Month', MONTHS[i], '#fff')}
+              ${stat('Total', fmt(total), 'var(--text)')}
+              ${stat('Bikes', fmt(bikes)+` (${(bikes/total*100).toFixed(0)}%)`, 'var(--accent)')}
+              ${stat('Accessories', fmt(acc)+` (${(acc/total*100).toFixed(0)}%)`, 'var(--accent3)')}
+              ${stat('Clothing', fmt(cloth)+` (${(cloth/total*100).toFixed(0)}%)`, 'var(--gold)')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── HEATMAP ─────────────────────────────────────────────────────────────────
+function buildHeatmap() {
+  const allVals = Object.values(HEATMAP_DATA).flat().filter(v=>v!==null);
+  const min = Math.min(...allVals);
+  const max = Math.max(...allVals);
+  const hm = document.getElementById('heatmap');
+
+  // Header row
+  let html = `<div class="hm-cell hm-header"></div>`;
+  MONTHS.forEach(m => { html += `<div class="hm-cell hm-header" style="justify-content:center">${m}</div>`; });
+
+  [2015,2016,2017].forEach(yr => {
+    html += `<div class="hm-cell hm-year">${yr}</div>`;
+    HEATMAP_DATA[yr].forEach((v,mi) => {
+      if(v===null){
+        html += `<div class="hm-cell"><div class="hm-val" style="width:100%;height:100%;background:rgba(255,255,255,0.03)"></div></div>`;
+      } else {
+        const intensity = (v-min)/(max-min);
+        const alpha = 0.08 + intensity*0.92;
+        html += `<div class="hm-cell">
+          <div class="hm-val" style="width:100%;height:100%;background:rgba(0,229,180,${alpha.toFixed(2)})">
+            <div class="hm-tooltip">${MONTHS[mi]} ${yr}<br>${fmt(v)}</div>
+          </div>
+        </div>`;
+      }
+    });
+  });
+
+  hm.innerHTML = html;
+}
+
+// ─── QUARTERLY ───────────────────────────────────────────────────────────────
+function buildQuarterChart() {
+  const labels = QUARTERLY.map(q=>`Q${q.q} ${q.year}`);
+  const colors = QUARTERLY.map(q=>q.q===2?'rgba(0,229,180,0.85)':q.q===4?'rgba(245,200,66,0.7)':'rgba(124,109,250,0.65)');
+  const hover  = QUARTERLY.map(q=>q.q===2?'#00e5b4':q.q===4?'#f5c842':'#7c6dfa');
+  const ctx = document.getElementById('quarterChart').getContext('2d');
+  if(charts.quarter) charts.quarter.destroy();
+  charts.quarter = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        data:QUARTERLY.map(q=>q.rev),
+        backgroundColor:colors, hoverBackgroundColor:hover,
+        borderRadius:2, borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: extTooltip('q-strip', t => {
+            const i=t.dataPoints[0].dataIndex;
+            const q=QUARTERLY[i];
+            const prev=QUARTERLY[i-1];
+            const g=prev?((q.rev-prev.rev)/prev.rev*100).toFixed(1):null;
+            return `<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+              ${stat(`Q${q.q} ${q.year}`, fmt(q.rev), '#fff')}
+              ${stat('Orders', fmtN(q.orders), 'var(--accent3)')}
+              ${g?stat('vs Prev Q', (g>0?'↑':'↓')+Math.abs(g)+'%', g>0?'var(--accent)':'var(--accent2)'):''}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:9},maxRotation:45},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── DAY OF WEEK ─────────────────────────────────────────────────────────────
+function buildDowChart() {
+  const maxRev = Math.max(...DOW.map(d=>d.revenue));
+  const colors = DOW.map(d=>d.day==='Mon'?'rgba(0,229,180,0.9)':'rgba(124,109,250,0.6)');
+  const hover  = DOW.map(d=>d.day==='Mon'?'#00e5b4':'#7c6dfa');
+  const ctx = document.getElementById('dowChart').getContext('2d');
+  if(charts.dow) charts.dow.destroy();
+  charts.dow = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:DOW.map(d=>d.day),
+      datasets:[{
+        data:DOW.map(d=>d.revenue),
+        backgroundColor:colors,hoverBackgroundColor:hover,
+        borderRadius:2,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          ...tooltipStyle,
+          callbacks:{
+            title:ctx=>ctx[0].label,
+            label:ctx=>[` Revenue: ${fmt(ctx.parsed.y)}`,` Orders: ${DOW[ctx.dataIndex].orders.toLocaleString()}`],
+            labelColor:()=>({borderColor:'var(--accent)',backgroundColor:'var(--accent)'})
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── PEAK MONTHS ─────────────────────────────────────────────────────────────
+function buildPeakList() {
+  const maxRev = PEAK_MONTHS[0].revenue;
+  const rankClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
+  const list = document.getElementById('peak-list');
+  list.innerHTML = PEAK_MONTHS.map((p,i)=>`
+    <div class="peak-item">
+      <span class="peak-rank ${rankClass(i)}">${i+1}</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span class="peak-month-label">${p.month} ${p.year}</span>
+          <span class="peak-rev">${fmt(p.revenue)}</span>
+        </div>
+        <div class="peak-bar"><div class="peak-bar-fill" data-w="${(p.revenue/maxRev*100).toFixed(1)}"></div></div>
+      </div>
+    </div>`).join('');
+  setTimeout(()=>{document.querySelectorAll('.peak-bar-fill').forEach(el=>{el.style.width=el.dataset.w+'%';});},500);
+}
+
+// ─── YOY MONTHLY ─────────────────────────────────────────────────────────────
+function buildYoYMonthChart() {
+  const ctx = document.getElementById('yoyMonthChart').getContext('2d');
+  if(charts.yoyM) charts.yoyM.destroy();
+  charts.yoyM = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'2015',data:YOY_MONTHLY[2015],borderColor:'rgba(245,200,66,0.7)',backgroundColor:'transparent',borderWidth:1.5,tension:0.4,pointRadius:0,pointHoverRadius:6,pointHoverBackgroundColor:'#f5c842',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2},
+        {label:'2016',data:YOY_MONTHLY[2016],borderColor:'rgba(124,109,250,0.7)',backgroundColor:'transparent',borderWidth:1.5,tension:0.4,pointRadius:0,pointHoverRadius:6,pointHoverBackgroundColor:'#7c6dfa',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2},
+        {label:'2017',data:YOY_MONTHLY[2017].map(v=>v===null?NaN:v),borderColor:'#00e5b4',backgroundColor:'transparent',borderWidth:2.5,tension:0.4,pointRadius:0,pointHoverRadius:7,pointHoverBackgroundColor:'#00e5b4',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2,spanGaps:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:10,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external: extTooltip('yoy-strip', t => {
+            const i=t.dataPoints[0].dataIndex;
+            const pts=t.dataPoints.filter(p=>!isNaN(p.parsed.y)).sort((a,b)=>b.parsed.y-a.parsed.y);
+            const colorMap={'2015':'#f5c842','2016':'#7c6dfa','2017':'#00e5b4'};
+            return `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+              ${stat('Month', MONTHS[i], '#fff')}
+              ${pts.map(p=>{
+                const yr15=YOY_MONTHLY[2015][i];
+                const pctVs15=yr15?((p.parsed.y-yr15)/yr15*100).toFixed(0):null;
+                return stat(p.dataset.label, fmt(p.parsed.y)+(pctVs15&&p.dataset.label!=='2015'?` (${pctVs15>0?'+':''}${pctVs15}%)`:''), colorMap[p.dataset.label]);
+              }).join('')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── RETURNS SEASONALITY ─────────────────────────────────────────────────────
+function buildRetSeasonChart() {
+  const ctx = document.getElementById('retSeasonChart').getContext('2d');
+  const colors = RET_SEASON.map(v=>v<100?'rgba(0,229,180,0.7)':v<160?'rgba(245,200,66,0.7)':'rgba(255,107,53,0.8)');
+  if(charts.retSeason) charts.retSeason.destroy();
+  charts.retSeason = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[{
+        data:RET_SEASON,
+        backgroundColor:colors,
+        hoverBackgroundColor:RET_SEASON.map(v=>v<100?'#00e5b4':v<160?'#f5c842':'#ff6b35'),
+        borderRadius:2,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: extTooltip('ret-strip', t => {
+            const i=t.dataPoints[0].dataIndex;
+            const v=RET_SEASON[i];
+            const sold=MONTHLY_TOTAL[i];
+            const rate=(v/(sold/100)*100).toFixed(2); // rough proxy
+            const insight = v<100?'Low return period':v<160?'Moderate returns':'High returns — post-peak';
+            return `<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+              ${stat('Month', MONTHS[i], '#fff')}
+              ${stat('Returns', v+' units', v<100?'var(--accent)':v<160?'var(--gold)':'var(--accent2)')}
+              ${stat('Insight', insight, 'var(--muted)')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── ROLLING 3M ──────────────────────────────────────────────────────────────
+function buildRollingChart() {
+  const ctx = document.getElementById('rollingChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(124,109,250,0.2)');
+  grad.addColorStop(1,'rgba(124,109,250,0)');
+  if(charts.rolling) charts.rolling.destroy();
+  charts.rolling = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:ROLLING.map(r=>r.ym),
+      datasets:[
+        {label:'Monthly',data:ROLLING.map(r=>r.rev),borderColor:'rgba(0,229,180,0.35)',backgroundColor:'transparent',borderWidth:1,tension:0.3,pointRadius:0,borderDash:[4,4]},
+        {label:'3M Rolling',data:ROLLING.map(r=>r.roll),borderColor:'#7c6dfa',backgroundColor:grad,fill:true,borderWidth:2.5,tension:0.4,pointRadius:0,pointHoverRadius:7,pointHoverBackgroundColor:'#7c6dfa',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2,spanGaps:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:10,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external: extTooltip('rolling-strip', t => {
+            const i=t.dataPoints[0].dataIndex;
+            const r=ROLLING[i];
+            const prev=ROLLING[i-1];
+            const rollPrev=prev?.roll;
+            const momentum=rollPrev?((r.roll-rollPrev)/rollPrev*100).toFixed(1):null;
+            return `<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+              ${stat('Period', r.ym, '#fff')}
+              ${stat('Actual Rev', fmt(r.rev), 'var(--accent)')}
+              ${r.roll?stat('3M Avg', fmt(r.roll), 'var(--accent3)'):''}
+              ${momentum?stat('Momentum', (momentum>0?'↑':'↓')+Math.abs(momentum)+'%', momentum>0?'var(--accent)':'var(--accent2)'):''}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:9},maxTicksLimit:10},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── CATEGORY SEASONALITY ────────────────────────────────────────────────────
+function buildCatSeasonChart() {
+  const CAT_BIKES  = [2180876,2238875,2446505,2554588,2842123,2902409,1275102,1242530,1196461,1330496,1357634,2074895];
+  const CAT_ACC    = [78356,75542,83670,85696,95466,88601,19039,71439,71027,74132,74221,89484];
+  const CAT_CLOTH  = [32885,31214,33819,35851,35704,39791,7330,26677,29318,29470,28669,34691];
+  const ctx = document.getElementById('catSeasonChart').getContext('2d');
+  if(charts.catS) charts.catS.destroy();
+  charts.catS = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'Bikes',      data:CAT_BIKES, borderColor:'#00e5b4',borderWidth:2,backgroundColor:'rgba(0,229,180,0.05)',fill:true,tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:'#00e5b4',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2},
+        {label:'Accessories',data:CAT_ACC,   borderColor:'#7c6dfa',borderWidth:1.5,backgroundColor:'transparent',tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:'#7c6dfa',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2},
+        {label:'Clothing',   data:CAT_CLOTH, borderColor:'#f5c842',borderWidth:1.5,backgroundColor:'transparent',tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:'#f5c842',pointHoverBorderColor:'#0a0c10',pointHoverBorderWidth:2},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:10,usePointStyle:true}},
+        tooltip:{
+          ...tooltipStyle,
+          callbacks:{
+            title:ctx=>ctx[0].label,
+            label:ctx=>` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+            labelColor:ctx=>{const c=['#00e5b4','#7c6dfa','#f5c842'][ctx.datasetIndex];return{borderColor:c,backgroundColor:c};}
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── YEAR FILTER ─────────────────────────────────────────────────────────────
+function setYear(yr, btn) {
+  document.querySelectorAll('.ytab').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.color='';b.style.borderColor='';});
+  btn.classList.add('active');
+  // Could filter charts here — kept as visual toggle for now
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildMonthlyChart();
+  buildHeatmap();
+  buildQuarterChart();
+  buildDowChart();
+  buildPeakList();
+  buildYoYMonthChart();
+  buildRetSeasonChart();
+  buildRollingChart();
+  buildCatSeasonChart();
+});
+</script>
+</body>
+</html>

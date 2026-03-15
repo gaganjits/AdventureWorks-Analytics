@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventureWorks — Customer Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+</style>
+<style>
+  :root {
+    --bg:#0a0c10; --surface:#111318; --surface2:#181c23;
+    --border:rgba(255,255,255,0.07);
+    --accent:#00e5b4; --accent2:#ff6b35; --accent3:#7c6dfa;
+    --text:#e8eaf0; --muted:#6b7280; --gold:#f5c842;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,229,180,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,180,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrapper{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:32px 24px;}
+
+  /* HEADER */
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;gap:20px;flex-wrap:wrap;}
+  .eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  h1{font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,36px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;color:#fff;}
+  h1 span{color:var(--accent);}
+  .seg-tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .seg-tab{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Source Sans 3',sans-serif;font-size:11px;padding:6px 14px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;}
+  .seg-tab:hover{color:var(--text);border-color:rgba(255,255,255,0.15);}
+  .seg-tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
+  /* KPI STRIP */
+  .kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px;}
+  .kpi-card{background:var(--surface);padding:18px 20px 14px;position:relative;overflow:hidden;transition:background 0.2s;}
+  .kpi-card:hover{background:var(--surface2);}
+  .kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+  .kpi-card:hover::after{transform:scaleX(1);}
+  .kpi-label{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .kpi-value{font-family:'Outfit',sans-serif;font-size:clamp(16px,2.2vw,24px);font-weight:700;color:#fff;line-height:1;margin-bottom:5px;}
+  .kpi-sub{font-size:10px;color:var(--muted);}
+
+  /* GRIDS */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-32{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-23{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);padding:22px;animation:fadeUp 0.6s ease both;}
+  .card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:10px;}
+  .card-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#fff;}
+  .card-sub{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:0.04em;}
+  .card-badge{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+  /* HOVER STRIP */
+  .hover-strip{display:flex;gap:20px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);min-height:28px;flex-wrap:wrap;align-items:center;}
+  .h-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+  .h-val{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;}
+
+  /* SEGMENT BARS */
+  .seg-list{display:flex;flex-direction:column;gap:10px;}
+  .seg-item{cursor:default;}
+  .seg-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+  .seg-name{font-size:11px;color:var(--text);transition:color 0.15s;}
+  .seg-item:hover .seg-name{color:var(--accent);}
+  .seg-right{display:flex;gap:12px;align-items:baseline;}
+  .seg-rev{font-size:11px;color:var(--accent);}
+  .seg-pct{font-size:10px;color:var(--muted);}
+  .seg-bar-bg{height:3px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .seg-bar-fill{height:100%;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0;}
+
+  /* COHORT TABLE */
+  .cohort-table{width:100%;border-collapse:collapse;}
+  .cohort-table th{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 8px 10px 0;border-bottom:1px solid var(--border);}
+  .cohort-table td{font-size:11px;padding:10px 8px 10px 0;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+  .cohort-table tr{transition:background 0.15s;}
+  .cohort-table tbody tr:hover{background:rgba(255,255,255,0.03);}
+  .type-badge{display:inline-block;font-size:9px;padding:2px 7px;letter-spacing:0.06em;}
+  .badge-new{background:rgba(0,229,180,0.1);color:var(--accent);}
+  .badge-ret{background:rgba(124,109,250,0.1);color:var(--accent3);}
+  .pct-bar{display:inline-flex;align-items:center;gap:6px;}
+  .pct-bar-track{height:3px;background:rgba(255,255,255,0.06);width:60px;overflow:hidden;}
+  .pct-bar-fill{height:100%;}
+
+  /* TOP CUSTOMERS */
+  .cust-list{display:flex;flex-direction:column;gap:3px;}
+  .cust-item{display:flex;align-items:center;gap:10px;padding:8px 10px;transition:background 0.15s;cursor:default;}
+  .cust-item:hover{background:rgba(255,255,255,0.04);}
+  .cust-rank{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:var(--muted);width:18px;flex-shrink:0;}
+  .cust-rank.gold{color:var(--gold);}
+  .cust-rank.silver{color:#9ca3af;}
+  .cust-rank.bronze{color:#cd7f32;}
+  .cust-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;flex-shrink:0;}
+  .cust-info{flex:1;min-width:0;}
+  .cust-name{font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cust-occ{font-size:9px;color:var(--muted);margin-top:1px;}
+  .cust-rev{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;}
+
+  /* ORDER FREQUENCY */
+  .freq-bars{display:flex;gap:8px;align-items:flex-end;height:80px;padding:0 4px;}
+  .freq-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;}
+  .freq-bar{width:100%;background:var(--accent3);border-radius:1px 1px 0 0;transition:height 0.8s cubic-bezier(0.4,0,0.2,1);cursor:default;position:relative;}
+  .freq-bar:hover{background:var(--accent);}
+  .freq-bar:hover .freq-tooltip{opacity:1;}
+  .freq-tooltip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:rgba(10,12,16,0.97);border:1px solid rgba(0,229,180,0.2);padding:4px 8px;font-size:10px;color:#fff;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:10;}
+  .freq-label{font-size:9px;color:var(--muted);}
+
+  /* GENDER SPLIT */
+  .gender-split{display:flex;height:8px;overflow:hidden;border-radius:0;margin-bottom:12px;}
+  .gender-f{background:var(--accent3);transition:width 1s ease;}
+  .gender-m{background:var(--accent);transition:width 1s ease;}
+  .gender-legend{display:flex;gap:20px;margin-top:10px;}
+  .gender-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;}
+  .gender-dot{width:8px;height:8px;border-radius:50%;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .card:nth-child(1){animation-delay:0.1s}.card:nth-child(2){animation-delay:0.15s}
+  .card:nth-child(3){animation-delay:0.2s}.card:nth-child(4){animation-delay:0.25s}
+  .card:nth-child(5){animation-delay:0.3s}.card:nth-child(6){animation-delay:0.35s}
+  .card:nth-child(7){animation-delay:0.4s}.card:nth-child(8){animation-delay:0.45s}
+
+  .footer-note{margin-top:24px;text-align:center;font-size:10px;color:rgba(107,114,128,0.4);letter-spacing:0.08em;}
+  @media(max-width:900px){.grid-2,.grid-3,.grid-32,.grid-23{grid-template-columns:1fr;}}
+
+  /* ── TOP MINI NAV ── */
+  .top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10,12,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    overflow-x: auto;
+  }
+  .top-nav::-webkit-scrollbar { display: none; }
+  .top-nav-home {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0 16px 0 0;
+    margin-right: 12px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .top-nav-home:hover { color: #00ffcc; }
+  .top-nav-link {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0 12px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+  .top-nav-link:hover { color: var(--text); }
+  .top-nav-link.current { color: var(--accent); border-bottom-color: var(--accent); }
+  .wrapper, .hero, section { padding-top: calc(var(--top, 0px) + 44px) !important; }
+
+</style>
+</head>
+<body>
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a href="AdventureWorks_index.html" class="top-nav-home">⌂ AdventureWorks</a>
+    <a href="AdventureWorks_Revenue_Growth_Dashboard.html" class="top-nav-link ">Revenue & Growth</a><a href="AdventureWorks_Product_Category_Insights.html" class="top-nav-link ">Product & Category</a><a href="AdventureWorks_Customer_Analytics.html" class="top-nav-link current">Customer Analytics</a><a href="AdventureWorks_Regional_Performance.html" class="top-nav-link ">Regional Performance</a><a href="AdventureWorks_Seasonality_Channels.html" class="top-nav-link ">Seasonality</a>
+  </nav>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="eyebrow">AdventureWorks Analytics · Customer Analytics</div>
+      <h1>Customer<br>Segmentation <span>&amp; Behaviour</span></h1>
+    </div>
+    <div class="seg-tabs">
+      <a href="AdventureWorks_index.html" class="seg-tab" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">⌂ Home</a>
+      <button class="seg-tab active" onclick="setView('overview',this)">Overview</button>
+      <button class="seg-tab" onclick="setView('demographics',this)">Demographics</button>
+      <button class="seg-tab" onclick="setView('cohorts',this)">Cohorts</button>
+    </div>
+  </header>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Total Customers</div>
+      <div class="kpi-value">17,416</div>
+      <div class="kpi-sub">Unique buyers</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">Avg Rev / Customer</div>
+      <div class="kpi-value">$1,431</div>
+      <div class="kpi-sub">Median $540</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent3)">
+      <div class="kpi-label">Returning Rate</div>
+      <div class="kpi-value">27.1%</div>
+      <div class="kpi-sub">2017 customers</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent)">
+      <div class="kpi-label">Home Owners</div>
+      <div class="kpi-value">67.6%</div>
+      <div class="kpi-sub">Of all customers</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--accent2)">
+      <div class="kpi-label">Top Segment</div>
+      <div class="kpi-value" style="font-size:15px">Professional</div>
+      <div class="kpi-sub">$8.5M revenue</div>
+    </div>
+    <div class="kpi-card" style="--kc:var(--gold)">
+      <div class="kpi-label">1-Time Buyers</div>
+      <div class="kpi-value">66.4%</div>
+      <div class="kpi-sub">Single order only</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Income + Occupation -->
+  <div class="grid-2">
+
+    <!-- INCOME CHART -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Income Bracket</div>
+          <div class="card-sub">Hover bars to explore segment</div>
+        </div>
+        <div class="card-badge">Income</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="incomeChart"></canvas>
+      </div>
+      <div class="hover-strip" id="income-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover bars to explore</div>
+      </div>
+    </div>
+
+    <!-- OCCUPATION BARS -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Occupation</div>
+          <div class="card-sub">Hover to see customer count</div>
+        </div>
+        <div class="card-badge">Segment</div>
+      </div>
+      <div class="seg-list" id="occ-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: New vs Returning + Gender/Marital -->
+  <div class="grid-32">
+
+    <!-- NEW vs RETURNING STACKED -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">New vs Returning Customers</div>
+          <div class="card-sub">Revenue contribution by year · hover for breakdown</div>
+        </div>
+        <div class="card-badge">Cohort</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="cohortChart"></canvas>
+      </div>
+      <div class="hover-strip" id="cohort-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to see breakdown</div>
+      </div>
+    </div>
+
+    <!-- GENDER + MARITAL -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Customer Profile</div>
+          <div class="card-sub">Gender · marital · homeowner</div>
+        </div>
+        <div class="card-badge">Profile</div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Gender Split by Revenue</div>
+        <div class="gender-split" id="gender-bar">
+          <div class="gender-f" style="width:50.5%"></div>
+          <div class="gender-m" style="width:49.5%"></div>
+        </div>
+        <div class="gender-legend">
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--accent3)"></div><span>Female — 50.5% · $12.5M</span></div>
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--accent)"></div><span>Male — 49.5% · $12.2M</span></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Marital Status</div>
+        <div class="gender-split">
+          <div style="width:51.8%;background:var(--accent);transition:width 1s ease"></div>
+          <div style="width:48.2%;background:var(--gold);transition:width 1s ease"></div>
+        </div>
+        <div class="gender-legend">
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--accent)"></div><span>Married — 51.8% · $12.9M</span></div>
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--gold)"></div><span>Single — 48.2% · $12.0M</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Home Ownership</div>
+        <div class="gender-split">
+          <div style="width:69.6%;background:var(--accent);transition:width 1s ease"></div>
+          <div style="width:30.4%;background:var(--accent2);transition:width 1s ease"></div>
+        </div>
+        <div class="gender-legend">
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--accent)"></div><span>Owners — 69.6% · $17.4M</span></div>
+          <div class="gender-leg-item"><div class="gender-dot" style="background:var(--accent2)"></div><span>Renters — 30.4% · $7.6M</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Education + Order Frequency + Top Customers -->
+  <div class="grid-3">
+
+    <!-- EDUCATION -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Education</div>
+          <div class="card-sub">5 education levels</div>
+        </div>
+        <div class="card-badge">Education</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="eduChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ORDER FREQUENCY -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Purchase Frequency</div>
+          <div class="card-sub">Orders per customer · hover bars</div>
+        </div>
+        <div class="card-badge">Frequency</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="freqChart"></canvas>
+      </div>
+      <div class="hover-strip" id="freq-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to see details</div>
+      </div>
+    </div>
+
+    <!-- TOP CUSTOMERS -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top 10 Customers</div>
+          <div class="card-sub">By total lifetime revenue</div>
+        </div>
+        <div class="card-badge">LTV</div>
+      </div>
+      <div class="cust-list" id="cust-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ROW 4: Children chart + Acquisition -->
+  <div class="grid-2">
+
+    <!-- CUSTOMER ACQUISITION -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Customer Acquisition by Year</div>
+          <div class="card-sub">New customers added each year · hover for breakdown</div>
+        </div>
+        <div class="card-badge">Growth</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="acqChart"></canvas>
+      </div>
+      <div class="hover-strip" id="acq-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to explore</div>
+      </div>
+    </div>
+
+    <!-- CHILDREN vs REVENUE -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Children at Home</div>
+          <div class="card-sub">Household size impact · hover for detail</div>
+        </div>
+        <div class="card-badge">Household</div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="kidsChart"></canvas>
+      </div>
+      <div class="hover-strip" id="kids-strip">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to explore</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">AdventureWorks Analytics · 17,416 Customers · 2015–2017 · Built by Gaganjit Singh</div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const D = {
+  income: [
+    {bracket:'<$30K',   revenue:2879758,  customers:2775},
+    {bracket:'$30K–60K',revenue:6828265,  customers:5343},
+    {bracket:'$60K–90K',revenue:9344683,  customers:6422},
+    {bracket:'$90K–120K',revenue:3525527, customers:1786},
+    {bracket:'$120K+',  revenue:2336353,  customers:1090},
+  ],
+  occupation:[
+    {name:'Professional',  revenue:8466168, customers:5219},
+    {name:'Skilled Manual',revenue:5371045, customers:4264},
+    {name:'Management',    revenue:4624926, customers:2909},
+    {name:'Clerical',      revenue:3988371, customers:2749},
+    {name:'Manual',        revenue:2464078, customers:2275},
+  ],
+  cohort:[
+    {year:2015, new_rev:6404934, ret_rev:0,       new_cust:2630, ret_cust:0},
+    {year:2016, new_rev:7127527, ret_rev:2196677,  new_cust:7929, ret_cust:1204},
+    {year:2017, new_rev:3914183, ret_rev:5271266,  new_cust:6857, ret_cust:3645},
+  ],
+  education:[
+    {level:'Bachelors',          revenue:8420058, customers:5101},
+    {level:'Partial College',    revenue:6530437, customers:4748},
+    {level:'Graduate Degree',    revenue:4670880, customers:3002},
+    {level:'High School',        revenue:3878442, customers:3089},
+    {level:'Partial High School',revenue:1414769, customers:1476},
+  ],
+  frequency:[
+    {orders:1, customers:11559},
+    {orders:2, customers:4692},
+    {orders:3, customers:983},
+    {orders:'4+',customers:182},
+  ],
+  topCustomers:[
+    {name:'Maurice Shan',    occ:'Professional', revenue:12408, orders:6},
+    {name:'Janet Munoz',     occ:'Management',   revenue:12015, orders:6},
+    {name:'Lisa Cai',        occ:'Professional', revenue:11330, orders:7},
+    {name:'Lacey Zheng',     occ:'Professional', revenue:11086, orders:7},
+    {name:'Jordan Turner',   occ:'Management',   revenue:11022, orders:7},
+    {name:'Larry Munoz',     occ:'Professional', revenue:10852, orders:7},
+    {name:'Kate Anand',      occ:'Professional', revenue:10437, orders:4},
+    {name:'Larry Vazquez',   occ:'Management',   revenue:10395, orders:4},
+    {name:'Ariana Gray',     occ:'Professional', revenue:10391, orders:6},
+    {name:'Clarence Gao',    occ:'Professional', revenue:10332, orders:4},
+  ],
+  acquisition:[
+    {year:2015, customers:2630},
+    {year:2016, customers:7929},
+    {year:2017, customers:6857},
+  ],
+  children:[
+    {count:'0', revenue:7363935, customers:4920},
+    {count:'1', revenue:5394586, customers:3401},
+    {count:'2', revenue:5232752, customers:3540},
+    {count:'3', revenue:2851566, customers:2068},
+    {count:'4', revenue:2570275, customers:2163},
+    {count:'5', revenue:1501473, customers:1324},
+  ],
+};
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const fmt  = v => v>=1e6?`$${(v/1e6).toFixed(1)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}K`:`$${v.toFixed(0)}`;
+const fmtN = v => v>=1e3?`${(v/1e3).toFixed(1)}K`:String(v);
+const COLORS = ['#00e5b4','#7c6dfa','#f5c842','#ff6b35','#38bdf8','#e879f9'];
+const tooltipStyle = {
+  backgroundColor:'rgba(10,12,16,0.97)',borderColor:'rgba(0,229,180,0.25)',borderWidth:1,
+  titleColor:'#fff',bodyColor:'#9ca3af',
+  titleFont:{family:'Outfit',size:12,weight:'700'},bodyFont:{family:'Source Sans 3',size:11},
+  padding:12,cornerRadius:0,displayColors:true,boxWidth:8,boxHeight:8,
+};
+let charts={};
+
+function externalTooltip(stripId, buildFn) {
+  return ({chart,tooltip}) => {
+    const strip = document.getElementById(stripId);
+    if (!strip) return;
+    if (tooltip.opacity===0||!tooltip.dataPoints?.length) {
+      strip.innerHTML=`<div style="font-size:10px;color:var(--muted);letter-spacing:0.08em">← hover to explore</div>`;
+      return;
+    }
+    strip.innerHTML = buildFn(tooltip);
+  };
+}
+
+function statBlock(label, val, color='var(--accent)') {
+  return `<div><div class="h-label">${label}</div><div class="h-val" style="color:${color}">${val}</div></div>`;
+}
+
+// ─── INCOME CHART ─────────────────────────────────────────────────────────────
+function buildIncome() {
+  const ctx = document.getElementById('incomeChart').getContext('2d');
+  const totalRev = D.income.reduce((s,d)=>s+d.revenue,0);
+  if (charts.income) charts.income.destroy();
+  charts.income = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: D.income.map(d=>d.bracket),
+      datasets:[{
+        data: D.income.map(d=>d.revenue),
+        backgroundColor: COLORS.map(c=>c+'99'),
+        hoverBackgroundColor: COLORS,
+        borderRadius:2,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: externalTooltip('income-strip', tooltip => {
+            const i = tooltip.dataPoints[0].dataIndex;
+            const d = D.income[i];
+            const pct = (d.revenue/totalRev*100).toFixed(1);
+            return `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              ${statBlock('Bracket', d.bracket, COLORS[i])}
+              ${statBlock('Revenue', fmt(d.revenue), 'var(--accent)')}
+              ${statBlock('Customers', fmtN(d.customers), 'var(--text)')}
+              ${statBlock('% of Revenue', pct+'%', 'var(--accent3)')}
+              ${statBlock('Rev/Customer', fmt(d.revenue/d.customers), 'var(--gold)')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── OCCUPATION BARS ──────────────────────────────────────────────────────────
+function buildOccupation() {
+  const maxRev = Math.max(...D.occupation.map(o=>o.revenue));
+  const totalRev = D.occupation.reduce((s,o)=>s+o.revenue,0);
+  const list = document.getElementById('occ-list');
+  list.innerHTML = D.occupation.map((o,i)=>`
+    <div class="seg-item" onmouseenter="this.querySelector('.seg-bar-fill').style.opacity='1'" onmouseleave="">
+      <div class="seg-top">
+        <span class="seg-name">${o.name}</span>
+        <div class="seg-right">
+          <span class="seg-rev">${fmt(o.revenue)}</span>
+          <span class="seg-pct">${(o.revenue/totalRev*100).toFixed(0)}%</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="seg-bar-bg" style="flex:1">
+          <div class="seg-bar-fill" data-w="${(o.revenue/maxRev*100).toFixed(1)}" style="background:${COLORS[i]}"></div>
+        </div>
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${fmtN(o.customers)} custs</span>
+      </div>
+    </div>`).join('');
+  setTimeout(()=>{
+    document.querySelectorAll('#occ-list .seg-bar-fill').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  },400);
+}
+
+// ─── COHORT CHART ─────────────────────────────────────────────────────────────
+function buildCohort() {
+  const ctx = document.getElementById('cohortChart').getContext('2d');
+  if (charts.cohort) charts.cohort.destroy();
+  charts.cohort = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['2015','2016','2017'],
+      datasets:[
+        {label:'New',     data:D.cohort.map(d=>d.new_rev), backgroundColor:'rgba(0,229,180,0.7)', hoverBackgroundColor:'#00e5b4', borderRadius:0, borderSkipped:false},
+        {label:'Returning',data:D.cohort.map(d=>d.ret_rev),backgroundColor:'rgba(124,109,250,0.7)',hoverBackgroundColor:'#7c6dfa', borderRadius:0, borderSkipped:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',align:'end',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:10},boxWidth:10,padding:12,usePointStyle:true}},
+        tooltip:{
+          enabled:false,
+          external: externalTooltip('cohort-strip', tooltip => {
+            const i = tooltip.dataPoints[0].dataIndex;
+            const d = D.cohort[i];
+            const total = d.new_rev + d.ret_rev;
+            const retPct = total>0?(d.ret_rev/total*100).toFixed(0):0;
+            return `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              ${statBlock('Year', d.year, '#fff')}
+              ${statBlock('Total Revenue', fmt(total), 'var(--text)')}
+              ${statBlock('New Customers', fmtN(d.new_cust), 'var(--accent)')}
+              ${statBlock('New Rev', fmt(d.new_rev), 'var(--accent)')}
+              ${statBlock('Returning', fmtN(d.ret_cust), 'var(--accent3)')}
+              ${statBlock('Return Rev', fmt(d.ret_rev), 'var(--accent3)')}
+              ${statBlock('Retention %', retPct+'%', 'var(--gold)')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── EDUCATION CHART ─────────────────────────────────────────────────────────
+function buildEdu() {
+  const ctx = document.getElementById('eduChart').getContext('2d');
+  if (charts.edu) charts.edu.destroy();
+  charts.edu = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:D.education.map(d=>d.level),
+      datasets:[{
+        data:D.education.map(d=>d.revenue),
+        backgroundColor:COLORS.map(c=>c+'bb'),
+        hoverBackgroundColor:COLORS,
+        borderColor:'#111318',borderWidth:3,hoverOffset:6,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{
+        legend:{display:true,position:'right',labels:{color:'#6b7280',font:{family:'Source Sans 3',size:9},boxWidth:8,padding:8,usePointStyle:true}},
+        tooltip:{
+          ...tooltipStyle,
+          callbacks:{
+            title:ctx=>ctx[0].label,
+            label:ctx=>[` Revenue: ${fmt(ctx.parsed)}`,` Customers: ${fmtN(D.education[ctx.dataIndex].customers)}`],
+            labelColor:ctx=>({borderColor:COLORS[ctx.dataIndex],backgroundColor:COLORS[ctx.dataIndex]})
+          }
+        }
+      }
+    }
+  });
+}
+
+// ─── FREQUENCY CHART ─────────────────────────────────────────────────────────
+function buildFreq() {
+  const ctx = document.getElementById('freqChart').getContext('2d');
+  const total = D.frequency.reduce((s,d)=>s+d.customers,0);
+  if (charts.freq) charts.freq.destroy();
+  charts.freq = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:D.frequency.map(d=>`${d.orders} order${d.orders==='4+'?'s':d.orders>1?'s':''}`),
+      datasets:[{
+        data:D.frequency.map(d=>d.customers),
+        backgroundColor:['rgba(0,229,180,0.8)','rgba(124,109,250,0.7)','rgba(245,200,66,0.7)','rgba(255,107,53,0.7)'],
+        hoverBackgroundColor:['#00e5b4','#7c6dfa','#f5c842','#ff6b35'],
+        borderRadius:2,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: externalTooltip('freq-strip', tooltip => {
+            const i = tooltip.dataPoints[0].dataIndex;
+            const d = D.frequency[i];
+            const pct=(d.customers/total*100).toFixed(1);
+            return `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              ${statBlock('Orders', d.orders, '#fff')}
+              ${statBlock('Customers', fmtN(d.customers), 'var(--accent)')}
+              ${statBlock('% of Base', pct+'%', 'var(--gold)')}
+              ${i===0?statBlock('Insight','One-time buyers','var(--accent2)'):''}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmtN(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── TOP CUSTOMERS ────────────────────────────────────────────────────────────
+function buildTopCustomers() {
+  const avatarColors = ['#00e5b4','#7c6dfa','#f5c842','#ff6b35','#38bdf8','#e879f9','#4ade80','#fb923c','#a78bfa','#34d399'];
+  const rankClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
+  const list = document.getElementById('cust-list');
+  list.innerHTML = D.topCustomers.map((c,i)=>{
+    const initials = c.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    return `<div class="cust-item">
+      <span class="cust-rank ${rankClass(i)}">${i+1}</span>
+      <div class="cust-avatar" style="background:${avatarColors[i]}22;color:${avatarColors[i]};border:1px solid ${avatarColors[i]}44">${initials}</div>
+      <div class="cust-info">
+        <div class="cust-name">${c.name}</div>
+        <div class="cust-occ">${c.occ} · ${c.orders} orders</div>
+      </div>
+      <div class="cust-rev">${fmt(c.revenue)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── ACQUISITION CHART ───────────────────────────────────────────────────────
+function buildAcq() {
+  const ctx = document.getElementById('acqChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0,0,0,200);
+  gradient.addColorStop(0,'rgba(0,229,180,0.3)');
+  gradient.addColorStop(1,'rgba(0,229,180,0.0)');
+  if (charts.acq) charts.acq.destroy();
+  charts.acq = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:['2015','2016','2017'],
+      datasets:[{
+        data:D.acquisition.map(d=>d.customers),
+        borderColor:'#00e5b4',borderWidth:2.5,
+        backgroundColor:gradient,fill:true,tension:0.3,
+        pointRadius:5,pointHoverRadius:8,
+        pointBackgroundColor:'#00e5b4',pointBorderColor:'#0a0c10',pointBorderWidth:2,
+        pointHoverBackgroundColor:'#00ffcc',pointHoverBorderColor:'#0a0c10',
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: externalTooltip('acq-strip', tooltip => {
+            const i = tooltip.dataPoints[0].dataIndex;
+            const d = D.acquisition[i];
+            const prev = i>0?D.acquisition[i-1].customers:null;
+            const growth = prev?((d.customers-prev)/prev*100).toFixed(0):null;
+            return `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              ${statBlock('Year', d.year, '#fff')}
+              ${statBlock('New Customers', fmtN(d.customers), 'var(--accent)')}
+              ${growth!==null?statBlock('YoY Growth', (growth>0?'↑':'↓')+Math.abs(growth)+'%', growth>0?'var(--accent)':'var(--accent2)'):''}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmtN(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── KIDS CHART ──────────────────────────────────────────────────────────────
+function buildKids() {
+  const ctx = document.getElementById('kidsChart').getContext('2d');
+  const total = D.children.reduce((s,d)=>s+d.revenue,0);
+  if (charts.kids) charts.kids.destroy();
+  charts.kids = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:D.children.map(d=>`${d.count} child${d.count!=='1'?'ren':''}`),
+      datasets:[{
+        data:D.children.map(d=>d.revenue),
+        backgroundColor:COLORS.map(c=>c+'99'),
+        hoverBackgroundColor:COLORS,
+        borderRadius:2,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external: externalTooltip('kids-strip', tooltip => {
+            const i = tooltip.dataPoints[0].dataIndex;
+            const d = D.children[i];
+            return `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+              ${statBlock('Children', d.count, COLORS[i])}
+              ${statBlock('Revenue', fmt(d.revenue), 'var(--accent)')}
+              ${statBlock('Customers', fmtN(d.customers), 'var(--text)')}
+              ${statBlock('% of Total', (d.revenue/total*100).toFixed(1)+'%', 'var(--accent3)')}
+              ${statBlock('Rev/Cust', fmt(d.revenue/d.customers), 'var(--gold)')}
+            </div>`;
+          })
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10}},border:{display:false}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7280',font:{family:'Source Sans 3',size:10},callback:v=>fmt(v)},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── VIEW SWITCHER ───────────────────────────────────────────────────────────
+function setView(view, btn) {
+  document.querySelectorAll('.seg-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // All sections always visible for now — tabs reserved for future filtering
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildIncome();
+  buildOccupation();
+  buildCohort();
+  buildEdu();
+  buildFreq();
+  buildTopCustomers();
+  buildAcq();
+  buildKids();
+});
+</script>
+</body>
+</html>
